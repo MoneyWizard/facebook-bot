@@ -3,6 +3,7 @@
 const { launchBrowser, createContext } = require('../browser/launcher');
 const { loadCookies, saveCookies } = require('../browser/cookies');
 const { randomDelay, simulateMouseMove, microDelay } = require('../utils/humanBehavior');
+const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction } = require('../utils/sessionBehavior');
 const logger = require('../utils/logger');
 
 const ADD_FRIEND_TEXTS = ['Add Friend', 'Add as Friend'];
@@ -23,8 +24,12 @@ async function addFriend(urlOrUsername) {
 
   logger.info(`[Action] Add Friend: ${profileUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  if (!canPerformAction('addFriend')) {
+    return { success: false, action: 'daily_limit', message: 'Daily add friend limit reached.' };
+  }
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {
@@ -85,6 +90,7 @@ async function addFriend(urlOrUsername) {
     await saveCookies(context);
 
     if (success) {
+      recordAction('addFriend');
       const newText = (await confirmBtn.innerText()).trim();
       logger.info(`✓ Friend request sent. Button now shows: "${newText}"`);
       return {
@@ -125,8 +131,12 @@ async function cancelFriendRequest(urlOrUsername) {
 
   logger.info(`[Action] Cancel Friend Request: ${profileUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  if (!canPerformAction('cancelRequest')) {
+    return { success: false, action: 'daily_limit', message: 'Daily cancel request limit reached.' };
+  }
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {

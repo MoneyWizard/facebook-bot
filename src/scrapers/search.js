@@ -20,8 +20,8 @@ async function searchPeople(query, opts = {}) {
   const maxPages = opts.maxPages || config.scraping.maxSearchPages;
   logger.info(`Searching Facebook people: "${query}" (max ${maxPages} pages)`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   await page.route('**/*.{mp4,avi,mov,wmv}', (r) => r.abort());

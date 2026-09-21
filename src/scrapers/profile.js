@@ -21,8 +21,8 @@ async function scrapeProfile(urlOrUsername) {
 
   logger.info(`Scraping profile: ${profileUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   // Block unnecessary resources to reduce fingerprint surface + speed up

@@ -23,8 +23,8 @@ async function getFollowers(urlOrUsername, opts = {}) {
   const followersUrl = `${baseUrl}/followers`;
   logger.info(`Scraping followers: ${followersUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {

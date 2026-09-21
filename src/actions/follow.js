@@ -3,6 +3,7 @@
 const { launchBrowser, createContext } = require('../browser/launcher');
 const { loadCookies, saveCookies } = require('../browser/cookies');
 const { randomDelay, simulateMouseMove, microDelay } = require('../utils/humanBehavior');
+const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction } = require('../utils/sessionBehavior');
 const logger = require('../utils/logger');
 
 // Button text variations Facebook uses
@@ -23,8 +24,12 @@ async function followUser(urlOrUsername) {
 
   logger.info(`[Action] Follow: ${profileUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  if (!canPerformAction('follow')) {
+    return { success: false, action: 'daily_limit', message: 'Daily follow limit reached.' };
+  }
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {
@@ -32,6 +37,11 @@ async function followUser(urlOrUsername) {
     if (!hasCookies) {
       return { success: false, action: 'no_session', message: 'Load session cookies first.' };
     }
+
+    // Warmup: browse a couple of FB pages first
+    await warmupSession(page);
+    // Browse the target profile organically before following
+    await browseProfileBeforeAction(page, profileUrl);
 
     await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await randomDelay(2000, 4000);
@@ -78,6 +88,7 @@ async function followUser(urlOrUsername) {
     await saveCookies(context);
 
     if (success) {
+      recordAction('follow');
       const newText = (await confirmBtn.innerText()).trim();
       logger.info(`✓ Followed successfully. Button now shows: "${newText}"`);
       return {
@@ -113,8 +124,12 @@ async function unfollowUser(urlOrUsername) {
 
   logger.info(`[Action] Unfollow: ${profileUrl}`);
 
-  const browser = await launchBrowser();
-  const context = await createContext(browser);
+  if (!canPerformAction('unfollow')) {
+    return { success: false, action: 'daily_limit', message: 'Daily unfollow limit reached.' };
+  }
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {
