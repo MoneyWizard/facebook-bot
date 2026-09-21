@@ -14,6 +14,8 @@ const { getFollowers } = require('./src/scrapers/followers');
 const { analyzeProfile, listModes } = require('./src/ai/analyzer');
 const { followUser, unfollowUser } = require('./src/actions/follow');
 const { addFriend, cancelFriendRequest, bulkAddFriends } = require('./src/actions/addFriend');
+const { createPost } = require('./src/actions/post');
+const { engageWithContent } = require('./src/actions/engage');
 const {
   addTask,
   addBulkTasks,
@@ -381,6 +383,51 @@ program
       }
     } catch (err) {
       spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:post ─────────────────────────────────────────────────────
+program
+  .command('action:post')
+  .description('Create a post promoting hexnemesis.com or custom content')
+  .option('-t, --target <url>', 'Target page, group, or feed URL', 'https://www.facebook.com/')
+  .option('--text <text>', 'Explicit post text (if omitted, AI generates promotion for hexnemesis.com)')
+  .option('--link <url>', 'Promo link to highlight', 'https://hexnemesis.com')
+  .action(async (opts) => {
+    const spinner = ora('Creating post...').start();
+    try {
+      const result = await createPost({ targetUrl: opts.target, text: opts.text, promoLink: opts.link });
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ Post created: "${result.text.slice(0, 60)}..."`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed to post: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:engage ───────────────────────────────────────────────────
+program
+  .command('action:engage')
+  .description('Like and leave an AI comment promoting hexnemesis.com on a target post')
+  .argument('<target>', 'Target post or profile URL')
+  .option('--no-like', 'Skip liking')
+  .option('--no-comment', 'Skip commenting')
+  .option('--link <url>', 'Promo link for comment', 'https://hexnemesis.com')
+  .action(async (target, opts) => {
+    const spinner = ora(`Engaging with content on ${target}...`).start();
+    try {
+      const result = await engageWithContent(target, { like: opts.like, comment: opts.comment, promoLink: opts.link });
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ Engaged: ${result.message}`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed to engage: ${err.message}`));
       process.exit(1);
     }
   });

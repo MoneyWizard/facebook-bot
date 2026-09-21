@@ -5,6 +5,8 @@ require('dotenv').config();
 const { getNextTask, updateTaskStatus, getQueueStats } = require('./queueManager');
 const { followUser, unfollowUser } = require('../actions/follow');
 const { addFriend, cancelFriendRequest } = require('../actions/addFriend');
+const { createPost } = require('../actions/post');
+const { engageWithContent } = require('../actions/engage');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
 const { saveProfile, saveSearchResults } = require('../utils/storage');
@@ -42,6 +44,12 @@ async function executeTask(task) {
 
     case 'cancel_request':
       return await cancelFriendRequest(target);
+
+    case 'post':
+      return await createPost({ targetUrl: target, ...payload });
+
+    case 'engage':
+      return await engageWithContent(target, payload);
 
     case 'scrape_profile': {
       const profile = await scrapeProfile(target);
@@ -91,6 +99,8 @@ async function workerLoop() {
       'unfollow': 'unfollow',
       'add_friend': 'addFriend',
       'cancel_request': 'cancelRequest',
+      'post': 'post',
+      'engage': 'comment',
       'scrape_profile': 'scrape',
       'scrape_followers': 'scrape',
     };

@@ -53,6 +53,9 @@ const DEFAULT_LIMITS = {
   unfollow: 50,
   addFriend: 20,
   cancelRequest: 30,
+  post: 5,
+  like: 40,
+  comment: 15,
   scrape: 200,
 };
 
