@@ -13,6 +13,8 @@ const scrapeRoute   = require('./routes/scrape');
 const searchRoute   = require('./routes/search');
 const analyzeRoute  = require('./routes/analyze');
 const resultsRoute  = require('./routes/results');
+const followersRoute = require('./routes/followers');
+const actionsRoute  = require('./routes/actions');
 
 const app = express();
 
@@ -38,7 +40,9 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/scrape/profile', scrapeRoute);
 app.use('/api/scrape/search',  searchRoute);
+app.use('/api/scrape/followers', followersRoute);
 app.use('/api/analyze',        analyzeRoute);
+app.use('/api/actions',        actionsRoute);
 app.use('/api/results',        resultsRoute);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
@@ -74,10 +78,16 @@ function start() {
     logger.info('='.repeat(60));
     logger.info('  Endpoints:');
     logger.info(`  GET  /api/health`);
-    logger.info(`  POST /api/scrape/profile   { url, username }`);
-    logger.info(`  POST /api/scrape/search    { query, location, maxPages }`);
-    logger.info(`  POST /api/analyze          { profileId, mode, customPrompt }`);
+    logger.info(`  POST /api/scrape/profile      { url, username }`);
+    logger.info(`  POST /api/scrape/search       { query, location, maxPages }`);
+    logger.info(`  POST /api/scrape/followers    { url, username, maxPages }`);
+    logger.info(`  POST /api/analyze             { profileId, mode, customPrompt }`);
     logger.info(`  GET  /api/analyze/modes`);
+    logger.info(`  POST /api/actions/follow         { url, username }`);
+    logger.info(`  POST /api/actions/unfollow        { url, username }`);
+    logger.info(`  POST /api/actions/add-friend      { url, username }`);
+    logger.info(`  POST /api/actions/cancel-request  { url, username }`);
+    logger.info(`  POST /api/actions/bulk-add-friends { urls[], maxPerSession }`);
     logger.info(`  GET  /api/results/profiles`);
     logger.info(`  GET  /api/results/profiles/:id`);
     logger.info(`  GET  /api/results/searches`);

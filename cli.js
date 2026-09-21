@@ -10,7 +10,10 @@ const Table = require('cli-table3');
 
 const { scrapeProfile } = require('./src/scrapers/profile');
 const { searchPeople } = require('./src/scrapers/search');
+const { getFollowers } = require('./src/scrapers/followers');
 const { analyzeProfile, listModes } = require('./src/ai/analyzer');
+const { followUser, unfollowUser } = require('./src/actions/follow');
+const { addFriend, cancelFriendRequest, bulkAddFriends } = require('./src/actions/addFriend');
 const {
   init: initDb,
   saveProfile,
@@ -228,6 +231,151 @@ program
   .action((id) => {
     removeJob(id);
     console.log(chalk.green(`✓ Job "${id}" removed.`));
+  });
+
+// ─── Command: scrape:followers ────────────────────────────────────────────────
+program
+  .command('scrape:followers')
+  .description('Scrape the followers list of a Facebook profile')
+  .argument('<target>', 'Full URL or username')
+  .option('-p, --pages <n>', 'Max pages to scrape', '3')
+  .option('--json', 'Output raw JSON')
+  .action(async (target, opts) => {
+    const spinner = ora(`Scraping followers of: ${target}`).start();
+    try {
+      const followers = await getFollowers(target, { maxPages: parseInt(opts.pages) });
+      saveSearchResults(`followers:${target}`, followers);
+      spinner.succeed(chalk.green(`Found ${followers.length} followers`));
+      if (opts.json) {
+        console.log(JSON.stringify(followers, null, 2));
+      } else {
+        printSearchResults(followers);
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:follow ───────────────────────────────────────────────────
+program
+  .command('action:follow')
+  .description('Follow a Facebook profile')
+  .argument('<target>', 'Profile URL or username')
+  .action(async (target) => {
+    const spinner = ora(`Following: ${target}`).start();
+    try {
+      const result = await followUser(target);
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ ${result.message}`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:unfollow ─────────────────────────────────────────────────
+program
+  .command('action:unfollow')
+  .description('Unfollow a Facebook profile')
+  .argument('<target>', 'Profile URL or username')
+  .action(async (target) => {
+    const spinner = ora(`Unfollowing: ${target}`).start();
+    try {
+      const result = await unfollowUser(target);
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ ${result.message}`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:add-friend ───────────────────────────────────────────────
+program
+  .command('action:add-friend')
+  .description('Send a friend request to a Facebook profile')
+  .argument('<target>', 'Profile URL or username')
+  .action(async (target) => {
+    const spinner = ora(`Sending friend request to: ${target}`).start();
+    try {
+      const result = await addFriend(target);
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ ${result.message}`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:cancel-request ──────────────────────────────────────────
+program
+  .command('action:cancel-request')
+  .description('Cancel a pending friend request')
+  .argument('<target>', 'Profile URL or username')
+  .action(async (target) => {
+    const spinner = ora(`Cancelling friend request to: ${target}`).start();
+    try {
+      const result = await cancelFriendRequest(target);
+      if (result.success) {
+        spinner.succeed(chalk.green(`✓ ${result.message}`));
+      } else {
+        spinner.warn(chalk.yellow(`⚠ ${result.action}: ${result.message}`));
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: action:bulk-add ─────────────────────────────────────────────────
+program
+  .command('action:bulk-add')
+  .description('Send friend requests to multiple profiles (rate-limited)')
+  .argument('<urls>', 'Comma-separated profile URLs')
+  .option('--delay-min <ms>', 'Min delay between requests (ms)', '8000')
+  .option('--delay-max <ms>', 'Max delay between requests (ms)', '20000')
+  .option('--max <n>', 'Max requests per session (safety cap)', '10')
+  .option('--json', 'Output raw JSON results')
+  .action(async (urlsArg, opts) => {
+    const urls = urlsArg.split(',').map((u) => u.trim()).filter(Boolean);
+    console.log(chalk.yellow(`\n⚠  Bulk-adding ${urls.length} profiles (max ${opts.max}/session). Use responsibly.\n`));
+
+    const spinner = ora(`Processing ${urls.length} friend requests...`).start();
+    try {
+      const results = await bulkAddFriends(urls, {
+        delayBetween: [parseInt(opts.delayMin), parseInt(opts.delayMax)],
+        maxPerSession: parseInt(opts.max),
+      });
+      const sent = results.filter((r) => r.action === 'request_sent').length;
+      spinner.succeed(chalk.green(`Done: ${sent}/${results.length} requests sent`));
+
+      if (opts.json) {
+        console.log(JSON.stringify(results, null, 2));
+      } else {
+        const table = new Table({
+          head: [chalk.cyan('#'), chalk.cyan('URL'), chalk.cyan('Action'), chalk.cyan('Message')],
+          colWidths: [4, 45, 20, 30],
+        });
+        results.forEach((r, i) => {
+          const actionColor = r.success ? chalk.green(r.action) : chalk.red(r.action);
+          table.push([i + 1, r.url, actionColor, r.message || '-']);
+        });
+        console.log(table.toString());
+      }
+    } catch (err) {
+      spinner.fail(chalk.red(`Failed: ${err.message}`));
+      process.exit(1);
+    }
   });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
