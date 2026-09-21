@@ -15,6 +15,8 @@ const analyzeRoute  = require('./routes/analyze');
 const resultsRoute  = require('./routes/results');
 const followersRoute = require('./routes/followers');
 const actionsRoute  = require('./routes/actions');
+const queueRoute    = require('./routes/queue');
+const { startWorker } = require('../engine/worker');
 
 const app = express();
 
@@ -44,6 +46,7 @@ app.use('/api/scrape/followers', followersRoute);
 app.use('/api/analyze',        analyzeRoute);
 app.use('/api/actions',        actionsRoute);
 app.use('/api/results',        resultsRoute);
+app.use('/api/queue',          queueRoute);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
@@ -67,8 +70,9 @@ function start() {
   // Initialize database
   initDb();
 
-  // Start cron scheduler
+  // Start cron scheduler & autonomous worker engine
   startScheduler();
+  startWorker();
 
   // Start Express server
   app.listen(config.port, () => {

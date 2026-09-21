@@ -15,6 +15,13 @@ const { analyzeProfile, listModes } = require('./src/ai/analyzer');
 const { followUser, unfollowUser } = require('./src/actions/follow');
 const { addFriend, cancelFriendRequest, bulkAddFriends } = require('./src/actions/addFriend');
 const {
+  addTask,
+  addBulkTasks,
+  getQueueStats,
+  listQueue,
+  clearQueue,
+} = require('./src/engine/queueManager');
+const {
   init: initDb,
   saveProfile,
   saveSearchResults,
@@ -376,6 +383,92 @@ program
       spinner.fail(chalk.red(`Failed: ${err.message}`));
       process.exit(1);
     }
+  });
+
+// ─── Command: queue:add ───────────────────────────────────────────────────────
+program
+  .command('queue:add')
+  .description('Enqueue an autonomous task (follow, add_friend, scrape_profile, etc.)')
+  .requiredOption('-a, --action <action>', 'Action type (follow | add_friend | scrape_profile | scrape_followers | unfollow | cancel_request)')
+  .requiredOption('-t, --target <target>', 'Target profile URL or username')
+  .option('-p, --priority <n>', 'Priority level (higher numbers run first)', '1')
+  .action((opts) => {
+    try {
+      const task = addTask({
+        action: opts.action,
+        target: opts.target,
+        priority: parseInt(opts.priority),
+      });
+      console.log(chalk.green(`✓ Enqueued task #${task.id}: ${task.action} -> ${task.target}`));
+    } catch (err) {
+      console.error(chalk.red(`Failed to queue task: ${err.message}`));
+    }
+  });
+
+// ─── Command: queue:bulk ──────────────────────────────────────────────────────
+program
+  .command('queue:bulk')
+  .description('Bulk enqueue targets for an action')
+  .requiredOption('-a, --action <action>', 'Action type (follow | add_friend | scrape_profile)')
+  .requiredOption('-t, --targets <urls>', 'Comma-separated target URLs/usernames')
+  .option('-p, --priority <n>', 'Priority level', '1')
+  .action((opts) => {
+    const targets = opts.targets.split(',').map(t => t.trim()).filter(Boolean);
+    const tasks = addBulkTasks(opts.action, targets, {}, parseInt(opts.priority));
+    console.log(chalk.green(`✓ Enqueued ${tasks.length} tasks for action "${opts.action}"`));
+  });
+
+// ─── Command: queue:status ────────────────────────────────────────────────────
+program
+  .command('queue:status')
+  .description('Display autonomous queue status and task counts')
+  .action(() => {
+    const stats = getQueueStats();
+    console.log(chalk.bold('\nAutonomous Task Queue Overview:'));
+    const table = new Table({
+      head: [chalk.cyan('Total'), chalk.cyan('Pending'), chalk.cyan('Processing'), chalk.cyan('Completed'), chalk.cyan('Failed')],
+    });
+    table.push([stats.total, chalk.yellow(stats.pending), chalk.blue(stats.processing), chalk.green(stats.completed), chalk.red(stats.failed)]);
+    console.log(table.toString() + '\n');
+  });
+
+// ─── Command: queue:list ──────────────────────────────────────────────────────
+program
+  .command('queue:list')
+  .description('List tasks in the autonomous queue')
+  .option('-s, --status <status>', 'Filter by status (pending | processing | completed | failed)')
+  .option('-l, --limit <n>', 'Max items', '20')
+  .option('--json', 'Output JSON')
+  .action((opts) => {
+    const items = listQueue({ status: opts.status, limit: parseInt(opts.limit) });
+    if (opts.json) {
+      console.log(JSON.stringify(items, null, 2));
+      return;
+    }
+
+    console.log(chalk.bold(`\nQueued Tasks (${items.length}):`));
+    const table = new Table({
+      head: [chalk.cyan('ID'), chalk.cyan('Action'), chalk.cyan('Target'), chalk.cyan('Priority'), chalk.cyan('Status'), chalk.cyan('Created')],
+      colWidths: [6, 18, 40, 10, 14, 22],
+    });
+
+    for (const item of items) {
+      const statusColor = item.status === 'completed' ? chalk.green(item.status) :
+                          item.status === 'failed' ? chalk.red(item.status) :
+                          item.status === 'processing' ? chalk.blue(item.status) : chalk.yellow(item.status);
+      table.push([item.id, item.action, item.target, item.priority, statusColor, item.created_at.slice(0, 19).replace('T', ' ')]);
+    }
+    console.log(table.toString() + '\n');
+  });
+
+// ─── Command: queue:clear ─────────────────────────────────────────────────────
+program
+  .command('queue:clear')
+  .description('Clear tasks from the queue')
+  .option('-s, --status <status>', 'Clear only tasks matching status (e.g. completed | failed)')
+  .action((opts) => {
+    clearQueue(opts.status);
+    console.log(chalk.green(`✓ Queue cleared${opts.status ? ` for status "${opts.status}"` : ''}.`));
   });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
