@@ -1,0 +1,7 @@
+node_modules/
+.env
+cookies/session.json
+logs/*.log
+data/*.json
+data/*.db
+.DS_Store
