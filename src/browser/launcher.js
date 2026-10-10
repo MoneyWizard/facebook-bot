@@ -94,10 +94,19 @@ async function launchBrowser() {
   };
 
   if (config.proxy.url) {
-    launchOptions.proxy = { server: config.proxy.url };
-    logger.info(`Proxy: ${config.proxy.url.replace(/:\/\/.*@/, '://[REDACTED]@')}`);
+    try {
+      const parsed = new URL(config.proxy.url);
+      launchOptions.proxy = {
+        server: `${parsed.protocol}//${parsed.host}`,
+      };
+      if (parsed.username) launchOptions.proxy.username = decodeURIComponent(parsed.username);
+      if (parsed.password) launchOptions.proxy.password = decodeURIComponent(parsed.password);
+    } catch {
+      launchOptions.proxy = { server: config.proxy.url };
+    }
+    logger.info(`Proxy configured: ${config.proxy.url.replace(/:\/\/.*@/, '://[REDACTED]@')}`);
   } else {
-    logger.warn('No proxy configured — risk of IP-based detection.');
+    logger.warn('No proxy configured — running directly on local connection.');
   }
 
   const browser = await chromium.launch(launchOptions);
