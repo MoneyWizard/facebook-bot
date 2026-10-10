@@ -50,34 +50,25 @@ async function searchPeople(query, opts = {}) {
       await randomScroll(page);
       await randomDelay();
 
-      // Extract visible search result cards
+      // Extract visible search result cards using modern Facebook link patterns
       const pageResults = await page.evaluate(() => {
-        const cards = Array.from(
-          document.querySelectorAll(
-            '[data-testid="browse-result-content"] div[role="article"], ' +
-            'div[data-gt] a[href*="/profile.php"], ' +
-            'div[data-pagelet*="SearchResults"] div[role="article"]'
-          )
-        );
+        const anchors = Array.from(document.querySelectorAll('a[href]'));
+        const excludePatterns = ['/search/', '/messages/', '/notifications/', '/friends/', '/login/', '/policies/', 'accountscenter', 'permalink.php'];
 
-        return cards.map((card) => {
-          // Name
-          const nameEl = card.querySelector('a[href*="facebook.com"] strong, span[dir="auto"] > span');
-          const name = nameEl?.innerText?.trim() || null;
+        const profileLinks = anchors.filter((a) => {
+          const href = a.href || '';
+          const text = a.innerText.trim();
+          if (!href.includes('facebook.com/')) return false;
+          if (!text || text.length < 2 || text.length > 50) return false;
+          if (excludePatterns.some((p) => href.includes(p))) return false;
+          // Matches user profile URLs
+          return href.includes('/profile.php?id=') || !href.slice(25).includes('/');
+        });
 
-          // Profile URL
-          const linkEl = card.querySelector('a[href*="facebook.com"]');
-          const url = linkEl?.href?.split('?')[0] || null;
-
-          // Location / secondary text
-          const spans = Array.from(card.querySelectorAll('span[dir="auto"]'));
-          const location = spans.length > 1 ? spans[1]?.innerText?.trim() : null;
-
-          // Avatar
-          const imgEl = card.querySelector('img');
-          const avatarUrl = imgEl?.src || null;
-
-          return { name, url, location, avatarUrl };
+        return profileLinks.map((a) => {
+          const name = a.innerText.split('\n')[0].trim();
+          const url = a.href.split('?')[0].includes('/profile.php') ? a.href.split('&')[0] : a.href.split('?')[0];
+          return { name, url, location: null, avatarUrl: null };
         }).filter((r) => r.name && r.url);
       });
 
