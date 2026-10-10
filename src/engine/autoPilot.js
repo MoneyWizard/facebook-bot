@@ -5,15 +5,18 @@ const { searchPeople } = require('../scrapers/search');
 const { config } = require('../config');
 const logger = require('../utils/logger');
 
-// Default target search niches for organic discovery
+// Target search niches aligned with HexNemesis Carpenter & Builder Software
 const DEFAULT_KEYWORDS = [
-  'technology',
-  'artificial intelligence',
-  'health tech',
-  'startups',
-  'entrepreneur',
-  'software engineer',
-  'innovation',
+  'carpenter',
+  'custom builder',
+  'cabinet maker',
+  'deck builder',
+  'general contractor',
+  'framing contractor',
+  'woodworking',
+  'finish carpenter',
+  'custom cabinetry',
+  'remodeling contractor',
 ];
 
 let lastPostTime = 0;
