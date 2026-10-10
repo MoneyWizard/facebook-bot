@@ -1,72 +1,252 @@
 {
-  "title": "HexNemesis",
+  "title": "HexNemesis | The Estate",
   "metaDesc": "",
+  "homeUrl": "https://hexnemesis.com/home.html",
   "headings": [
-    "Automate The World!"
+    "THE DIGITAL TOOLROOM",
+    "THE MASTER SUITES",
+    "CONSTRUCTION MASTER",
+    "CABINETRY MASTER",
+    "INDIVIDUAL PRECISION TOOLS",
+    "Tile Layout Grid",
+    "Stair Handrail Spindle Angle",
+    "Recessed Lighting Grid",
+    "Rafter Cut Calculator",
+    "Deck Baluster Spacer",
+    "Drywall Estimator",
+    "Crown Molding Angle Finder",
+    "Board Foot Calculator",
+    "Concrete Slab Estimator",
+    "Door Hinge Mortise Layout",
+    "Lumber Optimizer",
+    "Drawer Box Cut List Generator",
+    "Cabinet Door Overlay Math",
+    "Stair Stringer Layout",
+    "Quick-Quote Bid Generator",
+    "Wainscoting Panel Spacer",
+    "Baseboard Corner Math",
+    "Adjustable Shelf Pin Layout",
+    "Shiplap Coverage Estimator",
+    "Window Casing Math"
   ],
-  "paragraphs": [],
-  "toolsAndLinks": [
+  "toolCards": [
     {
-      "text": "HOME",
-      "href": "https://hexnemesis.com/home.html"
+      "name": "Tile Layout Grid",
+      "desc": "Calculate perfect symmetrical tile layouts and avoid sliver cuts.",
+      "link": "https://buy.stripe.com/6oU6oGeIW2J469K2Z1cMM0m"
     },
     {
-      "text": "DASHBOARD",
-      "href": "https://hexnemesis.com/dashboard.html"
+      "name": "Stair Handrail Spindle Angle",
+      "desc": "Calculate exact angle and spacing for handrail spindles.",
+      "link": "https://buy.stripe.com/28EbJ07gu2J4cy8dDFcMM0l"
     },
     {
-      "text": "API CONSOLE",
-      "href": "https://hexnemesis.com/api-console.html"
+      "name": "Recessed Lighting Grid",
+      "desc": "Symmetrical layout spacing for can lights to eliminate dead spots.",
+      "link": "https://buy.stripe.com/3cIaEWcAO2J4eGgfLNcMM0k"
     },
     {
-      "text": "CONTROL CENTER",
-      "href": "https://hexnemesis.com/control-center"
+      "name": "Rafter Cut Calculator",
+      "desc": "Pitch, plumb cuts, birdsmouth depth, and total rafter length.",
+      "link": "https://buy.stripe.com/5kQ3cu9oCcjEaq0fLNcMM0j"
     },
     {
-      "text": "HEXHUB",
-      "href": "https://hexnemesis.com/hexhub"
+      "name": "Deck Baluster Spacer",
+      "desc": "Mathematically perfect baluster spacing to meet building code.",
+      "link": "https://buy.stripe.com/5kQ28q6cq3N8aq06bdcMM0i"
     },
     {
-      "text": "JOBS",
-      "href": "https://hexnemesis.com/jobs.html"
+      "name": "Drywall Estimator",
+      "desc": "Calculate sheet count, mud, and tape needed for any room.",
+      "link": "https://buy.stripe.com/bJeaEWbwKgzU2XyczBcMM0h"
     },
     {
-      "text": "BUILD FACTORY",
-      "href": "https://hexnemesis.com/build-factory.js"
+      "name": "Crown Molding Angle Finder",
+      "desc": "Perfect miter and bevel settings for crown molding flat or nested.",
+      "link": "https://buy.stripe.com/14AfZg0S683ogOo6bdcMM0g"
     },
     {
-      "text": "ERD BUILDER",
-      "href": "https://hexnemesis.com/erd_builder.html"
+      "name": "Board Foot Calculator",
+      "desc": "Calculate accurate board feet for rough lumber pricing.",
+      "link": "https://buy.stripe.com/fZu8wOeIW83o55G7fhcMM0f"
     },
     {
-      "text": "CNC STATION",
-      "href": "https://hexnemesis.com/cncstation.html"
+      "name": "Concrete Slab Estimator",
+      "desc": "Calculate exact cubic yards of concrete needed for slabs and footings.",
+      "link": "https://buy.stripe.com/6oU28qasG5Vg1TuczBcMM0e"
     },
     {
-      "text": "DEVICE MANAGER",
-      "href": "https://hexnemesis.com/devices.html"
+      "name": "Door Hinge Mortise Layout",
+      "desc": "Exact hinge spacing for perfect door installations.",
+      "link": "https://buy.stripe.com/7sY4gy8ky2J41Tu9npcMM0d"
     },
     {
-      "text": "ARSENAL",
-      "href": "https://hexnemesis.com/arsenal.html"
+      "name": "Lumber Optimizer",
+      "desc": "Calculates mathematically perfect cut layouts for sheet goods to eliminate waste.",
+      "link": "https://buy.stripe.com/8x2fZg58merMcy8gPRcMM09"
     },
     {
-      "text": "TOOLS",
-      "href": "https://hexnemesis.com/tools.html"
+      "name": "Drawer Box Cut List Generator",
+      "desc": "Exact cuts for front, back, sides, and dadoed bottoms based on slide clearances.",
+      "link": "https://buy.stripe.com/bJe8wOcAO0AW0Pq7fhcMM08"
     },
     {
-      "text": "BOOKMARKLETS",
-      "href": "https://hexnemesis.com/bookmarklets.html"
+      "name": "Cabinet Door Overlay Math",
+      "desc": "Perfect single and double split door dimensions for face-frame or frameless.",
+      "link": "https://buy.stripe.com/6oU9AS1Wa0AW2XyeHJcMM07"
     },
     {
-      "text": "USERSCRIPTS",
-      "href": "https://hexnemesis.com/userscripts.html"
+      "name": "Stair Stringer Layout",
+      "desc": "Instantly calculates step counts, true riser heights, and total run for stairs.",
+      "link": "https://buy.stripe.com/4gM8wO30ebfAeGg0QTcMM06"
     },
     {
-      "text": "PRODUCTIVITY NEMESIS",
-      "href": "https://hexnemesis.com/productivity-nemesis"
+      "name": "Quick-Quote Bid Generator",
+      "desc": "Factor in materials, labor, and overhead to generate bulletproof bids instantly.",
+      "link": "https://buy.stripe.com/aFa3cueIW5Vg1Tu7fhcMM05"
+    },
+    {
+      "name": "Wainscoting Panel Spacer",
+      "desc": "Calculate mathematically perfect shadow box layouts across any wall length.",
+      "link": "https://buy.stripe.com/00wbJ0fN0abw69KczBcMM04"
+    },
+    {
+      "name": "Baseboard Corner Math",
+      "desc": "Perfect miter and coping angles for walls that are never exactly 90 degrees.",
+      "link": "https://buy.stripe.com/6oU00ibwK83o8hSfLNcMM03"
+    },
+    {
+      "name": "Adjustable Shelf Pin Layout",
+      "desc": "Perfect 32mm or Imperial shelf pin jig calculations with symmetrical dead space.",
+      "link": "https://buy.stripe.com/9B69AS0S683o69KfLNcMM02"
+    },
+    {
+      "name": "Shiplap Coverage Estimator",
+      "desc": "Calculate exact board counts with standard waste overages instantly.",
+      "link": "https://buy.stripe.com/eVq6oG1WafvQ8hSgPRcMM01"
+    },
+    {
+      "name": "Window Casing Math",
+      "desc": "Perfect inside-to-inside cut lengths for flawless miters.",
+      "link": "https://buy.stripe.com/3cIfZg6cq6Zk69KartcMM00"
     }
   ],
-  "bodySummary": "MENU ☰\nAutomate The World!\nENTER\n© HEXNEMESIS™ PRODUCTION 2024-2026",
-  "crawledAt": "2026-10-10T05:02:55.355Z"
+  "paragraphs": [
+    "Precision software designed exclusively for master builders, carpenters, and contractors. Protect your profit margins with mathematically perfect layouts. Ditch the mental math. Execute with absolute precision.",
+    "Premium Native Windows Desktop Applications",
+    "10 unified tools for general contractors and framing.",
+    "10 unified tools for high-end finish carpentry.",
+    "Targeted solutions for specific trades",
+    "Calculate perfect symmetrical tile layouts and avoid sliver cuts.",
+    "Calculate exact angle and spacing for handrail spindles.",
+    "Symmetrical layout spacing for can lights to eliminate dead spots.",
+    "Pitch, plumb cuts, birdsmouth depth, and total rafter length.",
+    "Mathematically perfect baluster spacing to meet building code.",
+    "Calculate sheet count, mud, and tape needed for any room.",
+    "Perfect miter and bevel settings for crown molding flat or nested.",
+    "Calculate accurate board feet for rough lumber pricing.",
+    "Calculate exact cubic yards of concrete needed for slabs and footings.",
+    "Exact hinge spacing for perfect door installations.",
+    "Calculates mathematically perfect cut layouts for sheet goods to eliminate waste.",
+    "Exact cuts for front, back, sides, and dadoed bottoms based on slide clearances.",
+    "Perfect single and double split door dimensions for face-frame or frameless.",
+    "Instantly calculates step counts, true riser heights, and total run for stairs.",
+    "Factor in materials, labor, and overhead to generate bulletproof bids instantly."
+  ],
+  "toolsAndLinks": [
+    {
+      "text": "MASTER SUITES",
+      "href": "https://hexnemesis.com/home.html#suites"
+    },
+    {
+      "text": "SINGLE TOOLS",
+      "href": "https://hexnemesis.com/home.html#tools"
+    },
+    {
+      "text": "ENTER THE VAULT",
+      "href": "https://hexnemesis.com/home.html#suites"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/6oU6oGeIW2J469K2Z1cMM0m"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/28EbJ07gu2J4cy8dDFcMM0l"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/3cIaEWcAO2J4eGgfLNcMM0k"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/5kQ3cu9oCcjEaq0fLNcMM0j"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/5kQ28q6cq3N8aq06bdcMM0i"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/bJeaEWbwKgzU2XyczBcMM0h"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/14AfZg0S683ogOo6bdcMM0g"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/fZu8wOeIW83o55G7fhcMM0f"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/6oU28qasG5Vg1TuczBcMM0e"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/7sY4gy8ky2J41Tu9npcMM0d"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/8x2fZg58merMcy8gPRcMM09"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/bJe8wOcAO0AW0Pq7fhcMM08"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/6oU9AS1Wa0AW2XyeHJcMM07"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/4gM8wO30ebfAeGg0QTcMM06"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/aFa3cueIW5Vg1Tu7fhcMM05"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/00wbJ0fN0abw69KczBcMM04"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/6oU00ibwK83o8hSfLNcMM03"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/9B69AS0S683o69KfLNcMM02"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/eVq6oG1WafvQ8hSgPRcMM01"
+    },
+    {
+      "text": "GET ACCESS",
+      "href": "https://buy.stripe.com/3cIfZg6cq6Zk69KartcMM00"
+    }
+  ],
+  "bodySummary": "HEXNEMESIS\nMASTER SUITES SINGLE TOOLS\nTHE DIGITAL TOOLROOM\n\nPrecision software designed exclusively for master builders, carpenters, and contractors. Protect your profit margins with mathematically perfect layouts. Ditch the mental math. Execute with absolute precision.\n\nENTER THE VAULT\nTHE MASTER SUITES\n\nPremium Native Windows Desktop Applications\n\nCONSTRUCTION MASTER\n$29.00\n\n10 unified tools for general contractors and framing.\n\nJobsite Lumber Optimizer\nStair Stringer Calculator\nConcrete Slab Estimator\nRafter Cut Math & Spacing\nQuick-Quote Bid Generator\n+ 5 more essential layout tools\nCABINETRY MASTER\n$29.00\n\n10 unified tools for high-end finish carpentry.\n\nWainscoting Panel Spacer\nCabinet Door Overlay Math\nDrawer Box Cut List Generator\n32mm Adjustable Shelf Pin Layout\nBaseboard & Coping Math\n+ 5 more precision finish tools\nINDIVIDUAL PRECISION TOOLS\n\nTargeted solutions for specific trades\n\nCONSTRUCTION\nTile Layout Grid\n\nCalculate perfect symmetrical tile layouts and avoid sliver cuts.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nStair Handrail Spindle Angle\n\nCalculate exact angle and spacing for handrail spindles.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nRecessed Lighting Grid\n\nSymmetrical layout spacing for can lights to eliminate dead spots.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nRafter Cut Calculator\n\nPitch, plumb cuts, birdsmouth depth, and total rafter length.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nDeck Baluster Spacer\n\nMathematically perfect baluster spacing to meet building code.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nDrywall Estimator\n\nCalculate sheet count, mud, and tape needed for any room.\n\n$7.00\nGET ACCESS\nCABINETRY\nCrown Molding Angle Finder\n\nPerfect miter and bevel settings for crown molding flat or nested.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nBoard Foot Calculator\n\nCalculate accurate board feet for rough lumber pricing.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nConcrete Slab Estimator\n\nCalculate exact cubic yards of concrete needed for slabs and footings.\n\n$7.00\nGET ACCESS\nCABINETRY\nDoor Hinge Mortise Layout\n\nExact hinge spacing for perfect door installations.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nLumber Optimizer\n\nCalculates mathematically perfect cut layouts for sheet goods to eliminate waste.\n\n$7.00\nGET ACCESS\nCABINETRY\nDrawer Box Cut List Generator\n\nExact cuts for front, back, sides, and dadoed bottoms based on slide clearances.\n\n$7.00\nGET ACCESS\nCABINETRY\nCabinet Door Overlay Math\n\nPerfect single and double split door dimensions for face-frame or frameless.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nStair Stringer Layout\n\nInstantly calculates step counts, true riser heights, and total run for stairs.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nQuick-Quote Bid Generator\n\nFactor in materials, labor, and overhead to generate bulletproof bids instantly.\n\n$7.00\nGET ACCESS\nCABINETRY\nWainscoting Panel Spacer\n\nCalculate mathematically perfect shadow box layouts across any wall length.\n\n$7.00\nGET ACCESS\nCABINETRY\nBaseboard Corner Math\n\nPerfect miter and coping angles for walls that are never exactly 90 degrees.\n\n$7.00\nGET ACCESS\nCABINETRY\nAdjustable Shelf Pin Layout\n\nPerfect 32mm or Imperial shelf pin jig calculations with symmetrical dead space.\n\n$7.00\nGET ACCESS\nCONSTRUCTION\nShiplap Coverage Estimator\n\nCalculate exact board counts with standard waste overages instantly.\n\n$7.00\nGET ACCESS\nCABINETRY\nWindow Casing Math\n\nPerfect inside-to-inside cut lengths for flawless miters.\n\n$7.00\nGET ACCESS\n\n© 2026 HexNemesis Software. Developed for the Modern Builder.",
+  "crawledAt": "2026-10-10T05:15:19.244Z"
 }
