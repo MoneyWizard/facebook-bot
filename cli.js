@@ -16,6 +16,7 @@ const { followUser, unfollowUser } = require('./src/actions/follow');
 const { addFriend, cancelFriendRequest, bulkAddFriends } = require('./src/actions/addFriend');
 const { createPost } = require('./src/actions/post');
 const { engageWithContent } = require('./src/actions/engage');
+const { inspectSite, loadSiteKnowledge } = require('./src/ai/siteInspector');
 const {
   addTask,
   addBulkTasks,
@@ -428,6 +429,31 @@ program
       }
     } catch (err) {
       spinner.fail(chalk.red(`Failed to engage: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+// ─── Command: site:inspect ────────────────────────────────────────────────────
+program
+  .command('site:inspect')
+  .description('Crawl hexnemesis.com using Playwright and update the AI promotional knowledge base')
+  .option('-u, --url <url>', 'Target site URL', 'https://hexnemesis.com')
+  .action(async (opts) => {
+    const spinner = ora(`Crawling site content from ${opts.url}...`).start();
+    try {
+      const knowledge = await inspectSite(opts.url);
+      spinner.succeed(chalk.green(`✓ Crawled site: "${knowledge.title}" (${knowledge.headings.length} headings, ${knowledge.toolsAndLinks.length} tools found)`));
+      console.log(chalk.cyan('\nSite Knowledge Summary:'));
+      console.log(chalk.bold('Title:       ') + knowledge.title);
+      console.log(chalk.bold('Description: ') + knowledge.metaDesc);
+      console.log(chalk.bold('Headings:    ') + knowledge.headings.join(' | '));
+      if (knowledge.toolsAndLinks.length) {
+        console.log(chalk.bold('\nExtracted Links/Tools:'));
+        knowledge.toolsAndLinks.slice(0, 8).forEach((t) => console.log(`  • ${t.text} (${t.href})`));
+      }
+      console.log();
+    } catch (err) {
+      spinner.fail(chalk.red(`Crawl failed: ${err.message}`));
       process.exit(1);
     }
   });
