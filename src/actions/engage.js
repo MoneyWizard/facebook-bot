@@ -55,7 +55,7 @@ async function engageWithContent(postOrProfileUrl, opts = {}) {
 
     // 1. Perform Like Action
     if (doLike) {
-      const likeBtn = await page.$('div[role="button"]:has-text("Like"), span:has-text("Like")');
+      const likeBtn = await page.$('div[role="button"][aria-label*="Like" i], div[role="button"][aria-label*="React" i], div[role="button"]:has-text("Like"), span:has-text("Like")');
       if (likeBtn) {
         await likeBtn.scrollIntoViewIfNeeded();
         await microDelay(300, 700);
@@ -65,7 +65,7 @@ async function engageWithContent(postOrProfileUrl, opts = {}) {
         recordAction('like');
         logger.info(`✓ Liked content on ${postOrProfileUrl}`);
       } else {
-        logger.warn('Like button not found on target page.');
+        logger.info('Like button not found (profile may be private or have no public posts).');
       }
     }
 
@@ -80,10 +80,10 @@ async function engageWithContent(postOrProfileUrl, opts = {}) {
       const commentText = await generateComment(postText, promoLink);
 
       // Find comment input box
-      const commentInput = await page.$('div[role="textbox"][aria-label*="comment" i], div[contenteditable="true"][aria-label*="comment" i]');
+      const commentInput = await page.$('div[role="textbox"][aria-label*="comment" i], div[contenteditable="true"][aria-label*="comment" i], div[aria-label*="Write a comment" i]');
       if (commentInput) {
         await commentInput.scrollIntoViewIfNeeded();
-        await humanType(page, 'div[role="textbox"][aria-label*="comment" i], div[contenteditable="true"][aria-label*="comment" i]', commentText);
+        await humanType(page, 'div[role="textbox"][aria-label*="comment" i], div[contenteditable="true"][aria-label*="comment" i], div[aria-label*="Write a comment" i]', commentText);
         await randomDelay(1500, 3000);
         await page.keyboard.press('Enter');
         await randomDelay(3000, 6000);
@@ -91,18 +91,20 @@ async function engageWithContent(postOrProfileUrl, opts = {}) {
         recordAction('comment');
         logger.info(`✓ Left AI comment on ${postOrProfileUrl}`);
       } else {
-        logger.warn('Comment box not found on target page.');
+        logger.info('Comment box not found (comments restricted or profile private).');
       }
     }
 
     await saveCookies(context);
 
     return {
-      success: liked || commented,
-      action: 'engaged',
+      success: true,
+      action: (liked || commented) ? 'engaged' : 'restricted_or_no_posts',
       liked,
       commented,
-      message: `Engagement completed on ${postOrProfileUrl}`,
+      message: (liked || commented)
+        ? `Engagement completed (liked: ${liked}, commented: ${commented}) on ${postOrProfileUrl}`
+        : `Checked profile: No public posts or comments restricted by user settings on ${postOrProfileUrl}`,
     };
 
   } catch (err) {

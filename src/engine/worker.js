@@ -9,7 +9,7 @@ const { createPost } = require('../actions/post');
 const { engageWithContent } = require('../actions/engage');
 const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
 const { joinGroup, engageGroup } = require('../actions/groups');
-const { createPage, createGroup, inviteFriendsToGroup } = require('../actions/community');
+const { createPage, createGroup, inviteFriendsToGroup, inviteFriendsToPage } = require('../actions/community');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -80,6 +80,9 @@ async function executeTask(task) {
 
     case 'invite_group':
       return await inviteFriendsToGroup(target, payload?.maxInvites || 20);
+
+    case 'invite_page':
+      return await inviteFriendsToPage(target || 'https://www.facebook.com/profile.php?id=61588703994992', payload?.maxInvites || 30);
 
     case 'scrape_profile': {
       const profile = await scrapeProfile(target);

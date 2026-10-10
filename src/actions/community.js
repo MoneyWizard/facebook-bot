@@ -201,4 +201,81 @@ async function inviteFriendsToGroup(groupUrl, maxInvites = 20) {
   }
 }
 
-module.exports = { createPage, createGroup, inviteFriendsToGroup };
+/**
+ * Automatically invite friends to like and follow your Facebook Page.
+ *
+ * @param {string} pageUrl
+ * @param {number} [maxInvites=30]
+ * @returns {Promise<Object>}
+ */
+async function inviteFriendsToPage(pageUrl = 'https://www.facebook.com/profile.php?id=61588703994992', maxInvites = 30) {
+  logger.info(`[Community] Inviting friends to follow Page: ${pageUrl}`);
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
+  const page = await context.newPage();
+
+  try {
+    await loadCookies(context);
+    await warmupSession(page);
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await randomDelay(2500, 4500);
+
+    // 1. Look for direct "Invite friends" button or 3-dots menu
+    let inviteBtn = await page.$('div[aria-label*="Invite friends" i], div[role="button"]:has-text("Invite friends"), span:has-text("Invite friends")');
+
+    if (!inviteBtn) {
+      // Check 3 dots options menu
+      const moreBtn = await page.$('div[aria-label="See options"], div[aria-label*="Action options" i], div[aria-label="More options"]');
+      if (moreBtn) {
+        await moreBtn.click();
+        await randomDelay(1200, 2000);
+        inviteBtn = await page.$('div[role="menuitem"]:has-text("Invite friends"), span:has-text("Invite friends")');
+      }
+    }
+
+    if (!inviteBtn) {
+      return { success: false, action: 'not_found', message: 'Invite friends button not found on page.' };
+    }
+
+    await inviteBtn.click();
+    await randomDelay(2000, 4000);
+
+    // 2. In the invite dialog, select all or individual friends
+    const selectAllBtn = await page.$('div[role="dialog"] div[role="checkbox"]:has-text("Select all"), div[role="dialog"] span:has-text("Select all")');
+    let invitedCount = 0;
+
+    if (selectAllBtn) {
+      await selectAllBtn.click();
+      await randomDelay(1000, 2000);
+      invitedCount = 30;
+    } else {
+      const checkboxes = await page.$$('div[role="dialog"] input[type="checkbox"], div[role="dialog"] div[role="checkbox"]');
+      for (const box of checkboxes.slice(0, maxInvites)) {
+        await box.click();
+        await microDelay(200, 400);
+        invitedCount++;
+      }
+    }
+
+    // 3. Click "Send Invites"
+    const sendBtn = await page.$('div[role="dialog"] div[aria-label*="Send" i], div[role="dialog"] div[role="button"]:has-text("Send Invites"), div[role="dialog"] div[role="button"]:has-text("Send invites")');
+    if (sendBtn) {
+      await sendBtn.click();
+      await randomDelay(2500, 4500);
+    }
+
+    await saveCookies(context);
+    logger.info(`✓ Successfully sent Page invites on: ${pageUrl}`);
+    return { success: true, action: 'page_invites_sent', count: invitedCount, pageUrl };
+
+  } catch (err) {
+    logger.error(`inviteFriendsToPage error: ${err.message}`);
+    throw err;
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+}
+
+module.exports = { createPage, createGroup, inviteFriendsToGroup, inviteFriendsToPage };

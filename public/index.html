@@ -85,8 +85,8 @@
           <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-paper-plane mr-1"></i> Force Promo Post
           </button>
-          <button onclick="triggerAction('create_page')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-            <i class="fa-solid fa-file-lines mr-1"></i> Auto-Create FB Page
+          <button onclick="triggerAction('invite_page')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-bullhorn mr-1"></i> Invite Friends to Page
           </button>
           <button onclick="triggerAction('create_group')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-users mr-1"></i> Auto-Create FB Group
@@ -250,19 +250,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'post', target: 'https://www.facebook.com/', priority: 3 })
         });
-      } else if (action === 'create_page') {
+      } else if (action === 'invite_page') {
         await fetch('/api/queue/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'create_page',
-            target: 'https://www.facebook.com/pages/create/',
-            priority: 5,
-            payload: {
-              name: 'HexNemesis Builder Tools',
-              category: 'Software',
-              bio: 'Digital Toolroom featuring precision calculators for carpenters, framers, and builders: https://hexnemesis.com/home.html'
-            }
+            action: 'invite_page',
+            target: 'https://www.facebook.com/profile.php?id=61588703994992',
+            priority: 4,
+            payload: { maxInvites: 30 }
           })
         });
       } else if (action === 'create_group') {
