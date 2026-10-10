@@ -7,6 +7,9 @@ const { followUser, unfollowUser } = require('../actions/follow');
 const { addFriend, cancelFriendRequest } = require('../actions/addFriend');
 const { createPost } = require('../actions/post');
 const { engageWithContent } = require('../actions/engage');
+const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
+const { joinGroup, engageGroup } = require('../actions/groups');
+const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
 const { saveProfile, saveSearchResults } = require('../utils/storage');
@@ -55,6 +58,18 @@ async function executeTask(task) {
 
     case 'engage':
       return await engageWithContent(target, payload);
+
+    case 'dm':
+      return await sendDM(target, payload?.text || 'Hello!');
+
+    case 'check_inbox':
+      return await checkAndReplyInbox();
+
+    case 'join_group':
+      return await joinGroup(target);
+
+    case 'engage_group':
+      return await engageGroup(target);
 
     case 'scrape_profile': {
       const profile = await scrapeProfile(target);

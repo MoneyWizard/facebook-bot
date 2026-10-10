@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HexNemesis Social Growth Engine — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #0b0f19; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .glow-cyan { box-shadow: 0 0 20px rgba(6, 182, 212, 0.25); }
+    .card { background: #111827; border: 1px solid #1f2937; }
+  </style>
+</head>
+<body class="p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Navigation Header -->
+    <header class="flex justify-between items-center card p-5 rounded-2xl glow-cyan">
+      <div class="flex items-center space-x-4">
+        <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            HEXNEMESIS <span class="text-xs bg-cyan-900 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-700">AUTONOMOUS BOT</span>
+          </h1>
+          <p class="text-sm text-slate-400">Promoting: <span class="text-cyan-400 font-semibold">hexnemesis.com/home.html</span></p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span id="statusBadge" class="flex items-center gap-2 bg-emerald-950 text-emerald-400 px-3 py-1.5 rounded-full text-xs font-semibold border border-emerald-800">
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span> SYSTEM ACTIVE
+        </span>
+        <button onclick="refreshData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-medium border border-slate-700 transition">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div class="card p-5 rounded-2xl border-l-4 border-l-cyan-500">
+        <div class="flex justify-between items-start text-slate-400 text-sm">
+          <span>Total Tasks In Queue</span>
+          <i class="fa-solid fa-list-check text-cyan-400 text-lg"></i>
+        </div>
+        <div id="statTotal" class="text-3xl font-black text-white mt-2">--</div>
+        <div class="text-xs text-slate-400 mt-1"><span id="statPending" class="text-yellow-400 font-bold">--</span> Pending • <span id="statCompleted" class="text-emerald-400 font-bold">--</span> Done</div>
+      </div>
+
+      <div class="card p-5 rounded-2xl border-l-4 border-l-purple-500">
+        <div class="flex justify-between items-start text-slate-400 text-sm">
+          <span>Promotional Posts Today</span>
+          <i class="fa-solid fa-bullhorn text-purple-400 text-lg"></i>
+        </div>
+        <div id="statPosts" class="text-3xl font-black text-white mt-2">--</div>
+        <div class="text-xs text-slate-400 mt-1">Cap: 20 per day</div>
+      </div>
+
+      <div class="card p-5 rounded-2xl border-l-4 border-l-emerald-500">
+        <div class="flex justify-between items-start text-slate-400 text-sm">
+          <span>AI Engagements & Comments</span>
+          <i class="fa-solid fa-comments text-emerald-400 text-lg"></i>
+        </div>
+        <div id="statEngagements" class="text-3xl font-black text-white mt-2">--</div>
+        <div class="text-xs text-slate-400 mt-1">Cap: 50 per day</div>
+      </div>
+
+      <div class="card p-5 rounded-2xl border-l-4 border-l-blue-500">
+        <div class="flex justify-between items-start text-slate-400 text-sm">
+          <span>Friend Connections Sent</span>
+          <i class="fa-solid fa-user-plus text-blue-400 text-lg"></i>
+        </div>
+        <div id="statFriends" class="text-3xl font-black text-white mt-2">--</div>
+        <div class="text-xs text-slate-400 mt-1">Cap: 30 per day</div>
+      </div>
+    </div>
+
+    <!-- Quick Action Control Bar -->
+    <div class="card p-5 rounded-2xl">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">Quick Manual Overrides</h2>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+          <i class="fa-solid fa-paper-plane mr-1"></i> Force Promo Post
+        </button>
+        <button onclick="triggerAction('discover')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+          <i class="fa-solid fa-compass mr-1"></i> Trigger Auto-Pilot Discovery
+        </button>
+        <button onclick="triggerAction('clear_queue')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+          <i class="fa-solid fa-trash-can mr-1"></i> Clear Completed
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Task Queue -->
+    <div class="card rounded-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-yellow-400"></i> Autonomous Task Queue
+        </h2>
+        <span class="text-xs text-slate-400">Auto-refreshing every 5s</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="p-4">ID</th>
+              <th class="p-4">Action</th>
+              <th class="p-4">Target Profile / URL</th>
+              <th class="p-4">Priority</th>
+              <th class="p-4">Status</th>
+              <th class="p-4">Created</th>
+            </tr>
+          </thead>
+          <tbody id="queueTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="p-6 text-center text-slate-500">Loading task queue...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/queue/stats');
+        const stats = await res.json();
+        document.getElementById('statTotal').innerText = stats.total || 0;
+        document.getElementById('statPending').innerText = stats.pending || 0;
+        document.getElementById('statCompleted').innerText = stats.completed || 0;
+
+        const queueRes = await fetch('/api/queue?limit=15');
+        const queueData = await queueRes.json();
+        renderQueue(queueData.items || []);
+      } catch (e) {
+        console.error('Error fetching stats:', e);
+      }
+    }
+
+    function renderQueue(items) {
+      const tbody = document.getElementById('queueTableBody');
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">Queue is currently empty. Auto-Pilot will discover new leads shortly.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = items.map(item => {
+        let badgeColor = 'bg-yellow-950 text-yellow-400 border-yellow-800';
+        if (item.status === 'completed') badgeColor = 'bg-emerald-950 text-emerald-400 border-emerald-800';
+        if (item.status === 'failed') badgeColor = 'bg-rose-950 text-rose-400 border-rose-800';
+        if (item.status === 'processing') badgeColor = 'bg-cyan-950 text-cyan-400 border-cyan-800 animate-pulse';
+
+        return `
+          <tr class="hover:bg-slate-800/30 transition">
+            <td class="p-4 font-mono text-xs text-slate-400">#${item.id}</td>
+            <td class="p-4 font-semibold text-white uppercase text-xs tracking-wider">${item.action}</td>
+            <td class="p-4 text-cyan-300 font-mono text-xs truncate max-w-xs" title="${item.target}">${item.target}</td>
+            <td class="p-4 text-xs">${item.priority}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeColor}">
+                ${item.status}
+              </span>
+            </td>
+            <td class="p-4 text-xs text-slate-400">${new Date(item.created_at).toLocaleTimeString()}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function triggerAction(action) {
+      if (action === 'post') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'post', target: 'https://www.facebook.com/', priority: 3 })
+        });
+      } else if (action === 'clear_queue') {
+        await fetch('/api/queue?status=completed', { method: 'DELETE' });
+      }
+      fetchStats();
+    }
+
+    function refreshData() {
+      fetchStats();
+    }
+
+    fetchStats();
+    setInterval(fetchStats, 5000);
+  </script>
+</body>
+</html>

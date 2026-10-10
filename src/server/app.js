@@ -18,10 +18,13 @@ const actionsRoute  = require('./routes/actions');
 const queueRoute    = require('./routes/queue');
 const { startWorker } = require('../engine/worker');
 
+const path = require('path');
+
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '../../public')));
 
 // ─── Request Logging Middleware ───────────────────────────────────────────────
 app.use((req, _res, next) => {
