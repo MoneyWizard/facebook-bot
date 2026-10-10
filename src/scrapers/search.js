@@ -68,8 +68,14 @@ async function searchPeople(query, opts = {}) {
         return profileLinks.map((a) => {
           const name = a.innerText.split('\n')[0].trim();
           const url = a.href.split('?')[0].includes('/profile.php') ? a.href.split('&')[0] : a.href.split('?')[0];
-          return { name, url, location: null, avatarUrl: null };
-        }).filter((r) => r.name && r.url);
+
+          // Check surrounding card element for existing connection indicators
+          const card = a.closest('div[role="article"]') || a.closest('div[data-virtualized]') || a.parentElement?.parentElement?.parentElement;
+          const cardText = card ? card.innerText : '';
+          const isAlreadyConnected = cardText.includes('Friends') || (cardText.includes('Message') && !cardText.includes('Add Friend'));
+
+          return { name, url, isAlreadyConnected, location: null, avatarUrl: null };
+        }).filter((r) => r.name && r.url && !r.isAlreadyConnected);
       });
 
       logger.debug(`Found ${pageResults.length} results on page ${pageNum + 1}`);
