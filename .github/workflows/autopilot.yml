@@ -1,0 +1,61 @@
+name: Autonomous Bot Cloud Schedule
+
+on:
+  schedule:
+    # Run automatically every 4 hours around the clock on GitHub's cloud servers
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+jobs:
+  run-autopilot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers & Linux System Dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Inject Environment Secrets & Session Cookies
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SESSION_COOKIES_JSON: ${{ secrets.SESSION_COOKIES_JSON }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+        run: |
+          mkdir -p cookies data logs
+          echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > .env
+          echo "PORT=3500" >> .env
+          echo "HEADLESS=true" >> .env
+          if [ -n "${PROXY_URL}" ]; then
+            echo "PROXY_URL=${PROXY_URL}" >> .env
+          fi
+          if [ -n "${SESSION_COOKIES_JSON}" ]; then
+            echo "${SESSION_COOKIES_JSON}" > cookies/session.json
+            echo "Session cookies successfully injected into cloud runner."
+          fi
+
+      - name: Execute Autonomous Auto-Pilot Cycle
+        run: node -e "
+          require('dotenv').config();
+          const { init } = require('./src/utils/storage');
+          init();
+          const { runAutoPilotCycle } = require('./src/engine/autoPilot');
+          runAutoPilotCycle().then(() => console.log('Cloud Auto-Pilot cycle complete.')).catch(err => { console.error('Cycle error:', err); process.exit(1); });
+        "
+
+      - name: Commit Updated Database State Back to Repository
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "auto: update database state after cloud run" && git push)
