@@ -222,13 +222,16 @@ async function findButtonByText(page, texts) {
   for (const text of texts) {
     try {
       const selectors = [
+        `div[aria-label="${text}"]`,
+        `div[aria-label*="${text}" i]`,
         `div[role="button"]:has-text("${text}")`,
         `button:has-text("${text}")`,
+        `span:has-text("${text}")`,
         `a[role="button"]:has-text("${text}")`,
       ];
       for (const sel of selectors) {
         const el = await page.$(sel);
-        if (el) return el;
+        if (el && await el.isVisible().catch(() => false)) return el;
       }
     } catch {}
   }

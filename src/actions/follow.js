@@ -67,13 +67,31 @@ async function followUser(urlOrUsername) {
     }
 
     // Find the Follow button
-    const followBtn = await findButtonByText(page, FOLLOW_TEXTS);
+    let followBtn = await findButtonByText(page, FOLLOW_TEXTS);
     if (!followBtn) {
-      logger.warn(`Follow button not found on ${profileUrl}`);
-      return { success: false, action: 'not_found', message: 'Follow button not found. Profile may be private or already followed.' };
+      // Check 3-dots "More" menu
+      followBtn = await findInMoreMenu(page, FOLLOW_TEXTS);
     }
 
-    const btnText = (await followBtn.innerText()).trim();
+    if (!followBtn) {
+      // Smart Fallback: Check if "Add Friend" is visible on this personal profile
+      const addFriendBtn = await findButtonByText(page, ['Add Friend', 'Add as Friend']);
+      if (addFriendBtn) {
+        logger.info(`Follow not available, but "Add Friend" is visible on ${profileUrl}. Clicking Add Friend...`);
+        await addFriendBtn.scrollIntoViewIfNeeded();
+        await microDelay(300, 700);
+        await addFriendBtn.click();
+        await randomDelay(2000, 4000);
+        await saveCookies(context);
+        recordAction('addFriend');
+        return { success: true, action: 'request_sent', message: 'Sent friend request (Follow was not enabled on profile).', profileUrl };
+      }
+
+      logger.warn(`Follow/Friend button not found on ${profileUrl}`);
+      return { success: false, action: 'not_found', message: 'Follow button not found. Profile may be private or restricted.', profileUrl };
+    }
+
+    const btnText = (await followBtn.innerText().catch(() => 'Follow')).trim();
     logger.info(`Clicking "${btnText}" button...`);
 
     await followBtn.scrollIntoViewIfNeeded();
@@ -175,18 +193,45 @@ async function unfollowUser(urlOrUsername) {
 async function findButtonByText(page, texts) {
   for (const text of texts) {
     try {
-      // Try multiple selector strategies
       const selectors = [
+        `div[aria-label="${text}"]`,
+        `div[aria-label*="${text}" i]`,
         `div[role="button"]:has-text("${text}")`,
         `button:has-text("${text}")`,
+        `span:has-text("${text}")`,
         `a[role="button"]:has-text("${text}")`,
       ];
       for (const sel of selectors) {
         const el = await page.$(sel);
-        if (el) return el;
+        if (el && await el.isVisible().catch(() => false)) return el;
       }
     } catch {}
   }
+  return null;
+}
+
+async function findInMoreMenu(page, texts) {
+  try {
+    const moreBtnSelectors = [
+      'div[aria-label="See options"]',
+      'div[aria-label="More"]',
+      'div[aria-label*="options" i]',
+      'div[aria-label*="Actions for" i]',
+    ];
+    for (const sel of moreBtnSelectors) {
+      const moreBtn = await page.$(sel);
+      if (moreBtn && await moreBtn.isVisible().catch(() => false)) {
+        await moreBtn.click();
+        await page.waitForTimeout(1000);
+        for (const text of texts) {
+          const item = await page.$(`div[role="menuitem"]:has-text("${text}"), span:has-text("${text}")`);
+          if (item && await item.isVisible().catch(() => false)) {
+            return item;
+          }
+        }
+      }
+    }
+  } catch {}
   return null;
 }
 
