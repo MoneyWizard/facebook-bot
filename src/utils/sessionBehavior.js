@@ -51,11 +51,11 @@ const LIMITS_FILE = path.resolve('./data/daily-limits.json');
 const DEFAULT_LIMITS = {
   follow: 50,
   unfollow: 50,
-  addFriend: 20,
+  addFriend: 30,
   cancelRequest: 30,
-  post: 5,
-  like: 40,
-  comment: 15,
+  post: 20,
+  like: 50,
+  comment: 25,
   scrape: 200,
 };
 
