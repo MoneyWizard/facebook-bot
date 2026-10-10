@@ -79,6 +79,8 @@ async function executeTask(task) {
 async function workerLoop() {
   if (!isRunning) return;
 
+  let currentTask = null;
+
   try {
     // 1. Check if bot should be sleeping
     if (isSleepingHours()) {
@@ -88,16 +90,16 @@ async function workerLoop() {
     }
 
     // 2. Fetch next task
-    let task = getNextTask();
+    currentTask = getNextTask();
 
     // 3. If queue is empty, trigger Auto-Pilot Discovery to auto-populate the queue!
-    if (!task && config.autoPilot?.enabled !== false) {
+    if (!currentTask && config.autoPilot?.enabled !== false) {
       logger.info('[AutonomousWorker] Queue empty. Triggering Auto-Pilot Discovery Engine...');
       await runAutoPilotCycle();
-      task = getNextTask(); // Fetch newly discovered task
+      currentTask = getNextTask(); // Fetch newly discovered task
     }
 
-    if (!task) {
+    if (!currentTask) {
       // Idle pause if still empty after Auto-Pilot
       const idleMs = randInt(15000, 30000); // 15-30s poll interval
       logger.debug(`[AutonomousWorker] Queue idle. Check in ${Math.round(idleMs / 1000)}s...`);
@@ -117,29 +119,29 @@ async function workerLoop() {
       'scrape_followers': 'scrape',
     };
 
-    const limitKey = actionLimitMap[task.action];
+    const limitKey = actionLimitMap[currentTask.action];
     if (limitKey && !canPerformAction(limitKey)) {
-      logger.warn(`[AutonomousWorker] Daily limit reached for ${task.action}. Re-queueing task #${task.id} for later.`);
+      logger.warn(`[AutonomousWorker] Daily limit reached for ${currentTask.action}. Re-queueing task #${currentTask.id} for later.`);
       // Defer task
-      updateTaskStatus(task.id, 'pending', { priority: -1 });
+      updateTaskStatus(currentTask.id, 'pending', { priority: -1 });
       await new Promise(r => setTimeout(r, 60000));
       return setImmediate(workerLoop);
     }
 
     // 4. Mark task as processing
-    updateTaskStatus(task.id, 'processing', { attempts: (task.attempts || 0) + 1 });
-    logger.info(`[AutonomousWorker] Executing task #${task.id} (${task.action} -> ${task.target})`);
+    updateTaskStatus(currentTask.id, 'processing', { attempts: (currentTask.attempts || 0) + 1 });
+    logger.info(`[AutonomousWorker] Executing task #${currentTask.id} (${currentTask.action} -> ${currentTask.target})`);
 
     // 5. Execute task
-    const result = await executeTask(task);
+    const result = await executeTask(currentTask);
 
     if (result && result.success !== false) {
-      updateTaskStatus(task.id, 'completed', { result });
-      logger.info(`[AutonomousWorker] ✓ Completed task #${task.id}`);
+      updateTaskStatus(currentTask.id, 'completed', { result });
+      logger.info(`[AutonomousWorker] ✓ Completed task #${currentTask.id}`);
       processedCount++;
     } else {
-      updateTaskStatus(task.id, 'failed', { error: result?.message || 'Action returned failure status' });
-      logger.warn(`[AutonomousWorker] ✗ Failed task #${task.id}: ${result?.message}`);
+      updateTaskStatus(currentTask.id, 'failed', { error: result?.message || 'Action returned failure status' });
+      logger.warn(`[AutonomousWorker] ✗ Failed task #${currentTask.id}: ${result?.message}`);
     }
 
     // 6. Handle realistic pauses & session breaks
@@ -152,10 +154,10 @@ async function workerLoop() {
 
   } catch (err) {
     logger.error(`[AutonomousWorker] Unexpected worker error: ${err.message}`);
-    if (task?.id) {
-      updateTaskStatus(task.id, 'failed', { error: err.message });
+    if (currentTask?.id) {
+      updateTaskStatus(currentTask.id, 'failed', { error: err.message });
     }
-    // Pause briefly on exception
+    // Pause briefly on exception before continuing
     await new Promise(r => setTimeout(r, 15000));
   }
 
