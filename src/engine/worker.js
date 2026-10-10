@@ -12,6 +12,8 @@ const { getFollowers } = require('../scrapers/followers');
 const { saveProfile, saveSearchResults } = require('../utils/storage');
 const { canPerformAction, maybeTakeBreak } = require('../utils/sessionBehavior');
 const { gaussianDelay, randInt } = require('../utils/humanBehavior');
+const { runAutoPilotCycle } = require('./autoPilot');
+const { config } = require('../config');
 const logger = require('../utils/logger');
 
 let isRunning = false;
@@ -21,6 +23,9 @@ let processedCount = 0;
  * Check if the worker should sleep based on simulated "sleeping hours" (e.g. 11 PM to 7 AM).
  */
 function isSleepingHours() {
+  if (config.autoPilot?.nightOperations) {
+    return false; // 24/7 continuous operation active
+  }
   const hour = new Date().getHours();
   // Sleeping between 23:00 (11 PM) and 07:00 AM
   return hour >= 23 || hour < 7;
@@ -83,12 +88,19 @@ async function workerLoop() {
     }
 
     // 2. Fetch next task
-    const task = getNextTask();
+    let task = getNextTask();
+
+    // 3. If queue is empty, trigger Auto-Pilot Discovery to auto-populate the queue!
+    if (!task && config.autoPilot?.enabled !== false) {
+      logger.info('[AutonomousWorker] Queue empty. Triggering Auto-Pilot Discovery Engine...');
+      await runAutoPilotCycle();
+      task = getNextTask(); // Fetch newly discovered task
+    }
 
     if (!task) {
-      // Idle pause if queue is empty
-      const idleMs = randInt(15000, 30000); // 15-30s poll interval when queue is empty
-      logger.debug(`[AutonomousWorker] Queue empty. Idle check in ${Math.round(idleMs / 1000)}s...`);
+      // Idle pause if still empty after Auto-Pilot
+      const idleMs = randInt(15000, 30000); // 15-30s poll interval
+      logger.debug(`[AutonomousWorker] Queue idle. Check in ${Math.round(idleMs / 1000)}s...`);
       await new Promise(r => setTimeout(r, idleMs));
       return setImmediate(workerLoop);
     }

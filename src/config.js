@@ -34,6 +34,13 @@ const config = {
   // Logging
   logLevel: process.env.LOG_LEVEL || 'info',
 
+  // Auto-Pilot
+  autoPilot: {
+    enabled: process.env.AUTO_PILOT !== 'false',
+    nightOperations: process.env.NIGHT_OPERATIONS !== 'false', // 24/7 continuous operation by default
+    promoLink: process.env.PROMO_LINK || 'https://hexnemesis.com',
+  },
+
   // Paths
   paths: {
     cookies: './cookies/session.json',
