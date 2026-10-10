@@ -117,25 +117,7 @@ async function workerLoop() {
       return setImmediate(workerLoop);
     }
 
-    // 2. Fetch next task
-    currentTask = getNextTask();
-
-    // 3. If queue is empty, trigger Auto-Pilot Discovery to auto-populate the queue!
-    if (!currentTask && config.autoPilot?.enabled !== false) {
-      logger.info('[AutonomousWorker] Queue empty. Triggering Auto-Pilot Discovery Engine...');
-      await runAutoPilotCycle();
-      currentTask = getNextTask(); // Fetch newly discovered task
-    }
-
-    if (!currentTask) {
-      // Idle pause if still empty after Auto-Pilot
-      const idleMs = randInt(15000, 30000); // 15-30s poll interval
-      logger.debug(`[AutonomousWorker] Queue idle. Check in ${Math.round(idleMs / 1000)}s...`);
-      await new Promise(r => setTimeout(r, idleMs));
-      return setImmediate(workerLoop);
-    }
-
-    // 3. Map action string for session limit check
+    // 2. Action limit mapping
     const actionLimitMap = {
       'follow': 'follow',
       'unfollow': 'unfollow',
@@ -147,12 +129,26 @@ async function workerLoop() {
       'scrape_followers': 'scrape',
     };
 
-    const limitKey = actionLimitMap[currentTask.action];
-    if (limitKey && !canPerformAction(limitKey)) {
-      logger.warn(`[AutonomousWorker] Daily limit reached for ${currentTask.action}. Re-queueing task #${currentTask.id} for later.`);
-      // Defer task
-      updateTaskStatus(currentTask.id, 'pending', { priority: -1 });
-      await new Promise(r => setTimeout(r, 60000));
+    const isTaskAllowed = (task) => {
+      const limitKey = actionLimitMap[task.action];
+      return !limitKey || canPerformAction(limitKey);
+    };
+
+    // Fetch next task allowed under today's limits
+    currentTask = getNextTask(isTaskAllowed);
+
+    // 3. If no runnable task in queue, trigger Auto-Pilot Discovery to find fresh tasks
+    if (!currentTask && config.autoPilot?.enabled !== false) {
+      logger.info('[AutonomousWorker] No runnable tasks in queue. Triggering Auto-Pilot Discovery Engine...');
+      await runAutoPilotCycle();
+      currentTask = getNextTask(isTaskAllowed);
+    }
+
+    if (!currentTask) {
+      // Idle pause if still empty or all daily limits reached
+      const idleMs = randInt(20000, 40000);
+      logger.info(`[AutonomousWorker] Active tasks resting or daily limits met. Checking again in ${Math.round(idleMs / 1000)}s...`);
+      await new Promise(r => setTimeout(r, idleMs));
       return setImmediate(workerLoop);
     }
 

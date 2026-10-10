@@ -74,16 +74,22 @@ function addBulkTasks(action, targets, payload = {}, priority = 1) {
 
 /**
  * Get next pending task, ordered by priority (descending) and created_at (ascending).
+ * Optionally accepts a filterFn to skip tasks that are currently restricted (e.g. daily limits reached).
  */
-function getNextTask() {
+function getNextTask(filterFn = null) {
   initQueue();
   const db = getDb();
 
-  const pending = db.get('queue')
+  let pending = db.get('queue')
     .filter({ status: 'pending' })
     .value();
 
   if (!pending.length) return null;
+
+  if (typeof filterFn === 'function') {
+    pending = pending.filter(filterFn);
+    if (!pending.length) return null;
+  }
 
   // Sort by priority desc, then created_at asc
   pending.sort((a, b) => {

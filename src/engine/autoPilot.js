@@ -3,6 +3,7 @@
 const { addTask, getQueueStats } = require('./queueManager');
 const { searchPeople } = require('../scrapers/search');
 const { recordLead } = require('../crm/leadExporter');
+const { canPerformAction } = require('../utils/sessionBehavior');
 const { config } = require('../config');
 const logger = require('../utils/logger');
 
@@ -66,8 +67,9 @@ async function runAutoPilotCycle() {
     for (const item of results) {
       if (!item.url) continue;
 
-      // Randomly assign action: 60% friend request, 40% follow
-      const action = Math.random() < 0.6 ? 'add_friend' : 'follow';
+      // Check daily limit for addFriend
+      const canFriend = canPerformAction('addFriend');
+      const action = canFriend ? (Math.random() < 0.6 ? 'add_friend' : 'follow') : 'follow';
       addTask({
         action,
         target: item.url,
