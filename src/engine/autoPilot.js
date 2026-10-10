@@ -2,6 +2,7 @@
 
 const { addTask, getQueueStats } = require('./queueManager');
 const { searchPeople } = require('../scrapers/search');
+const { recordLead } = require('../crm/leadExporter');
 const { config } = require('../config');
 const logger = require('../utils/logger');
 
@@ -71,6 +72,15 @@ async function runAutoPilotCycle() {
         action,
         target: item.url,
         priority: 1,
+      });
+
+      // Automatically log contractor lead to CSV spreadsheet
+      recordLead({
+        name: item.name,
+        url: item.url,
+        location: item.location || 'Trade Target',
+        bio: `Discovered from "${keyword}" niche`,
+        status: `Queued (${action})`,
       });
 
       // Also queue an engagement task (like/comment) for 30% of discovered profiles

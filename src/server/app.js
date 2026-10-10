@@ -56,6 +56,15 @@ app.use('/api/actions',        actionsRoute);
 app.use('/api/results',        resultsRoute);
 app.use('/api/queue',          queueRoute);
 
+// ─── Lead CRM Routes ─────────────────────────────────────────────────────────
+const { getLeads, CSV_FILE } = require('../crm/leadExporter');
+app.get('/api/leads', (_req, res) => {
+  res.json({ count: getLeads().length, leads: getLeads() });
+});
+app.get('/api/leads/download', (_req, res) => {
+  res.download(CSV_FILE, 'contractor-leads.csv');
+});
+
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });

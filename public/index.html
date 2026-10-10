@@ -78,18 +78,54 @@
     </div>
 
     <!-- Quick Action Control Bar -->
-    <div class="card p-5 rounded-2xl">
-      <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">Quick Manual Overrides</h2>
-      <div class="flex flex-wrap gap-3">
-        <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-          <i class="fa-solid fa-paper-plane mr-1"></i> Force Promo Post
-        </button>
-        <button onclick="triggerAction('discover')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-          <i class="fa-solid fa-compass mr-1"></i> Trigger Auto-Pilot Discovery
-        </button>
-        <button onclick="triggerAction('clear_queue')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
-          <i class="fa-solid fa-trash-can mr-1"></i> Clear Completed
-        </button>
+    <div class="card p-5 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">Manual Engine Controls</h2>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-paper-plane mr-1"></i> Force Promo Post
+          </button>
+          <button onclick="triggerAction('discover')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-compass mr-1"></i> Trigger Trade Discovery
+          </button>
+          <button onclick="triggerAction('clear_queue')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
+            <i class="fa-solid fa-trash-can mr-1"></i> Clear Completed
+          </button>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-2">Spreadsheet CRM Export</h2>
+        <a href="/api/leads/download" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg transition inline-flex items-center">
+          <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Download Leads (CSV / Excel)
+        </a>
+      </div>
+    </div>
+
+    <!-- Contractor Leads CRM Table -->
+    <div class="card rounded-2xl overflow-hidden border border-emerald-900/40">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/30">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-address-book text-emerald-400"></i> Discovered Contractor Leads (Auto-Synced CRM)
+        </h2>
+        <span class="text-xs text-emerald-400 font-semibold" id="leadCountBadge">0 Total Leads</span>
+      </div>
+      <div class="overflow-x-auto max-h-80 overflow-y-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-900/80 text-xs uppercase text-slate-400 border-b border-slate-800 sticky top-0">
+            <tr>
+              <th class="p-4">Name</th>
+              <th class="p-4">Profile Link</th>
+              <th class="p-4">Trade / Niche</th>
+              <th class="p-4">Outreach Status</th>
+              <th class="p-4">Date Added</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="5" class="p-6 text-center text-slate-500">Loading contractor leads...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -136,9 +172,42 @@
         const queueRes = await fetch('/api/queue?limit=15');
         const queueData = await queueRes.json();
         renderQueue(queueData.items || []);
+
+        const leadsRes = await fetch('/api/leads');
+        const leadsData = await leadsRes.json();
+        renderLeads(leadsData.leads || []);
       } catch (e) {
         console.error('Error fetching stats:', e);
       }
+    }
+
+    function renderLeads(leads) {
+      const tbody = document.getElementById('leadsTableBody');
+      const badge = document.getElementById('leadCountBadge');
+      badge.innerText = `${leads.length} Total Leads`;
+
+      if (!leads.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No leads discovered yet. The engine will record them as it searches.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = leads.map(l => `
+        <tr class="hover:bg-slate-800/30 transition">
+          <td class="p-4 font-semibold text-white">${l.name}</td>
+          <td class="p-4 font-mono text-xs text-cyan-400">
+            <a href="${l.url}" target="_blank" class="hover:underline flex items-center gap-1">
+              ${l.url} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </td>
+          <td class="p-4 text-xs text-slate-300">${l.location || 'N/A'}</td>
+          <td class="p-4">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+              ${l.status}
+            </span>
+          </td>
+          <td class="p-4 text-xs text-slate-400">${l.date}</td>
+        </tr>
+      `).join('');
     }
 
     function renderQueue(items) {
