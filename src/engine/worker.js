@@ -9,6 +9,7 @@ const { createPost } = require('../actions/post');
 const { engageWithContent } = require('../actions/engage');
 const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
 const { joinGroup, engageGroup } = require('../actions/groups');
+const { createPage, createGroup, inviteFriendsToGroup } = require('../actions/community');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -70,6 +71,15 @@ async function executeTask(task) {
 
     case 'engage_group':
       return await engageGroup(target);
+
+    case 'create_page':
+      return await createPage(payload);
+
+    case 'create_group':
+      return await createGroup(payload);
+
+    case 'invite_group':
+      return await inviteFriendsToGroup(target, payload?.maxInvites || 20);
 
     case 'scrape_profile': {
       const profile = await scrapeProfile(target);
