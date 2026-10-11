@@ -124,6 +124,8 @@ function updateTaskStatus(id, status, extra = {}) {
   return db.get('queue').find({ id }).value();
 }
 
+const { getTodayCounts } = require('../utils/sessionBehavior');
+
 /**
  * Get queue summary stats.
  */
@@ -138,6 +140,7 @@ function getQueueStats() {
     processing: queue.filter(t => t.status === 'processing').length,
     completed: queue.filter(t => t.status === 'completed').length,
     failed: queue.filter(t => t.status === 'failed').length,
+    todayCounts: getTodayCounts(),
   };
 }
 

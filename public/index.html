@@ -83,10 +83,13 @@
         <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">Manual Engine Controls</h2>
         <div class="flex flex-wrap gap-3">
           <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-            <i class="fa-solid fa-paper-plane mr-1"></i> Force Promo Post
+            <i class="fa-solid fa-paper-plane mr-1"></i> Force Personal Post
+          </button>
+          <button onclick="triggerAction('post_page')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-building-flag mr-1"></i> Post to HexNemesis Page
           </button>
           <button onclick="triggerAction('invite_page')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-            <i class="fa-solid fa-bullhorn mr-1"></i> Invite Friends to Page
+            <i class="fa-solid fa-user-plus mr-1"></i> Invite Friends to Page
           </button>
           <button onclick="triggerAction('create_group')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-users mr-1"></i> Auto-Create FB Group
@@ -172,6 +175,12 @@
         document.getElementById('statPending').innerText = stats.pending || 0;
         document.getElementById('statCompleted').innerText = stats.completed || 0;
 
+        // Daily Limit & Action Counters
+        const tc = stats.todayCounts || {};
+        document.getElementById('statPosts').innerText = tc.post || 0;
+        document.getElementById('statEngagements').innerText = (tc.comment || 0) + (tc.like || 0);
+        document.getElementById('statFriends').innerText = tc.addFriend || 0;
+
         const queueRes = await fetch('/api/queue?limit=15');
         const queueData = await queueRes.json();
         renderQueue(queueData.items || []);
@@ -249,6 +258,21 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'post', target: 'https://www.facebook.com/', priority: 3 })
+        });
+      } else if (action === 'post_page') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'post',
+            target: 'https://www.facebook.com/profile.php?id=61588703994992',
+            priority: 5,
+            payload: {
+              promoLink: 'https://hexnemesis.com/home.html',
+              asPage: true,
+              topic: 'digital tools for carpenters, framers, and custom builders'
+            }
+          })
         });
       } else if (action === 'invite_page') {
         await fetch('/api/queue/add', {
