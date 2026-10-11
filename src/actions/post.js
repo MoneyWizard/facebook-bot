@@ -18,9 +18,12 @@ const logger = require('../utils/logger');
  */
 async function createPost(opts = {}) {
   const targetUrl = opts.targetUrl || 'https://www.facebook.com/';
-  const promoLink = opts.promoLink || 'https://hexnemesis.com';
+  const promoLink = opts.promoLink || 'https://hexnemesis.com/home.html';
+  const isPagePost = Boolean(opts.asPage) ||
+    targetUrl.includes('61588703994992') ||
+    targetUrl.toLowerCase().includes('hexnemesis');
 
-  logger.info(`[Action] Create Post on ${targetUrl}`);
+  logger.info(`[Action] Create Post on ${targetUrl} (asPage: ${isPagePost})`);
 
   if (!canPerformAction('post')) {
     return { success: false, action: 'daily_limit', message: 'Daily posting limit reached.' };
@@ -37,25 +40,36 @@ async function createPost(opts = {}) {
   const page = await context.newPage();
 
   try {
-    const hasCookies = await loadCookies(context);
+    const hasCookies = await loadCookies(context, { asPage: isPagePost });
     if (!hasCookies) {
       return { success: false, action: 'no_session', message: 'Load session cookies first.' };
     }
 
     await warmupSession(page);
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await randomDelay(2000, 4000);
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
+    await randomDelay(2000, 4500);
     await dismissCookieBanner(page);
 
     await simulateMouseMove(page);
     await randomDelay(1000, 2500);
 
-    // Look for the "What's on your mind?" create post box
+    // If Facebook displays a "Switch to HexNemesis Productions" button or prompt, click it
+    if (isPagePost) {
+      await handlePageSwitchPrompt(page);
+    }
+
+    // Look for the "What's on your mind?" create post box (Personal or Page)
     const createPostSelectors = [
       'div[role="button"]:has-text("What\'s on your mind")',
       'span:has-text("What\'s on your mind")',
       'div[role="button"]:has-text("Create a public post")',
       'div[role="button"]:has-text("Write something...")',
+      'span:has-text("Write something...")',
+      'div[role="button"]:has-text("Create a post")',
+      'div[role="button"]:has-text("Create post")',
+      'div[aria-label*="Create a post" i]',
+      'div[aria-label*="Write a post" i]',
+      'div[aria-label*="What\'s on your mind" i]',
     ];
 
     let createBox = null;
@@ -70,21 +84,22 @@ async function createPost(opts = {}) {
     }
 
     await createPostBoxClick(page, createBox);
-    await randomDelay(1500, 3000);
+    await randomDelay(2000, 3500);
 
     // Locate the active text area in the post modal
-    const inputSelector = 'div[role="dialog"] div[contenteditable="true"], div[role="dialog"] div[aria-label*="What\'s on your mind"]';
-    await page.waitForSelector(inputSelector, { timeout: 10000 });
+    const inputSelector = 'div[role="dialog"] div[contenteditable="true"], div[role="dialog"] div[aria-label*="What\'s on your mind" i], div[role="dialog"] div[aria-label*="Create a post" i], div[role="dialog"] div[aria-label*="Write something" i]';
+    await page.waitForSelector(inputSelector, { timeout: 15000 });
 
     // Type post text using human typing delays
     await humanType(page, inputSelector, postText);
-    await randomDelay(2000, 4000);
+    await randomDelay(2500, 4500);
 
     // Find and click "Post" button
     const postBtnSelectors = [
       'div[role="dialog"] div[aria-label="Post"]',
       'div[role="dialog"] div[role="button"]:has-text("Post")',
       'div[role="dialog"] button:has-text("Post")',
+      'div[role="dialog"] div[aria-label*="Post" i][role="button"]',
     ];
 
     let postBtn = null;
@@ -97,14 +112,23 @@ async function createPost(opts = {}) {
       return { success: false, action: 'not_found', message: 'Post submit button not found.' };
     }
 
-    await postBtn.click();
+    try {
+      await postBtn.click({ timeout: 8000 });
+    } catch {
+      try {
+        await postBtn.click({ force: true, timeout: 5000 });
+      } catch {
+        await page.evaluate(el => el.click(), postBtn);
+      }
+    }
+
     await randomDelay(4000, 8000); // Wait for post upload to complete
 
-    await saveCookies(context);
+    await saveCookies(context, { asPage: isPagePost });
     recordAction('post');
 
-    logger.info(`✓ Post successfully created on ${targetUrl}`);
-    return { success: true, action: 'posted', message: 'Post created successfully.', text: postText, targetUrl };
+    logger.info(`✓ Post successfully created on ${targetUrl} (asPage: ${isPagePost})`);
+    return { success: true, action: 'posted', message: 'Post created successfully.', text: postText, targetUrl, isPagePost };
 
   } catch (err) {
     logger.error(`createPost failed: ${err.message}`);
@@ -116,9 +140,41 @@ async function createPost(opts = {}) {
 }
 
 async function createPostBoxClick(page, element) {
-  await element.scrollIntoViewIfNeeded();
-  await microDelay(200, 500);
-  await element.click();
+  try {
+    await element.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+    await microDelay(200, 500);
+    await element.click({ timeout: 5000 });
+  } catch (err) {
+    logger.debug(`Standard click failed, falling back to force click: ${err.message}`);
+    try {
+      await element.click({ force: true, timeout: 5000 });
+    } catch {
+      await page.evaluate(el => el.click(), element);
+    }
+  }
+}
+
+async function handlePageSwitchPrompt(page) {
+  const switchSelectors = [
+    'div[aria-label*="Switch to" i]',
+    'div[role="button"]:has-text("Switch Now")',
+    'div[role="button"]:has-text("Switch now")',
+    'div[role="button"]:has-text("Use Page")',
+    'div[role="button"]:has-text("Switch")',
+    'span:has-text("Switch now")',
+    'span:has-text("Use Page")',
+  ];
+  for (const sel of switchSelectors) {
+    try {
+      const btn = await page.$(sel);
+      if (btn) {
+        logger.info(`[Action] Clicking Page switch prompt: ${sel}`);
+        await btn.click({ force: true });
+        await randomDelay(2000, 4000);
+        break;
+      }
+    } catch {}
+  }
 }
 
 async function dismissCookieBanner(page) {

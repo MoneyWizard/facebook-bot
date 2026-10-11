@@ -209,63 +209,144 @@ async function inviteFriendsToGroup(groupUrl, maxInvites = 20) {
  * @returns {Promise<Object>}
  */
 async function inviteFriendsToPage(pageUrl = 'https://www.facebook.com/profile.php?id=61588703994992', maxInvites = 30) {
-  logger.info(`[Community] Inviting friends to follow Page: ${pageUrl}`);
+  logger.info(`[Community] Inviting personal friends to follow Page: ${pageUrl}`);
 
   const { browser, identity } = await launchBrowser();
   const context = await createContext(browser, identity);
   const page = await context.newPage();
 
   try {
-    await loadCookies(context);
+    // Crucial: Friend invites MUST come from the personal account session (asPage: false)
+    await loadCookies(context, { asPage: false });
     await warmupSession(page);
-    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
     await randomDelay(2500, 4500);
 
+    // If Facebook asks "Switch to manage Page?" dismiss or stay as personal user
+    const dismissSwitchSelectors = [
+      'div[role="button"]:has-text("Not now")',
+      'div[role="button"]:has-text("Cancel")',
+      'div[aria-label="Close"]',
+      'div[aria-label="Close"][role="button"]',
+    ];
+    for (const sel of dismissSwitchSelectors) {
+      try {
+        const btn = await page.$(sel);
+        if (btn) {
+          await btn.click({ force: true });
+          await randomDelay(1000, 2000);
+          break;
+        }
+      } catch {}
+    }
+
     // 1. Look for direct "Invite friends" button or 3-dots menu
-    let inviteBtn = await page.$('div[aria-label*="Invite friends" i], div[role="button"]:has-text("Invite friends"), span:has-text("Invite friends")');
+    const inviteSelectors = [
+      'div[aria-label*="Invite friends" i]',
+      'div[role="button"]:has-text("Invite friends")',
+      'span:has-text("Invite friends")',
+      'a:has-text("Invite friends")',
+    ];
+
+    let inviteBtn = null;
+    for (const sel of inviteSelectors) {
+      inviteBtn = await page.$(sel);
+      if (inviteBtn) break;
+    }
 
     if (!inviteBtn) {
       // Check 3 dots options menu
-      const moreBtn = await page.$('div[aria-label="See options"], div[aria-label*="Action options" i], div[aria-label="More options"]');
-      if (moreBtn) {
-        await moreBtn.click();
-        await randomDelay(1200, 2000);
-        inviteBtn = await page.$('div[role="menuitem"]:has-text("Invite friends"), span:has-text("Invite friends")');
+      const moreBtnSelectors = [
+        'div[aria-label="See options"]',
+        'div[aria-label*="Action options" i]',
+        'div[aria-label="More options"]',
+        'div[aria-label*="More" i][role="button"]',
+        'div[aria-haspopup="menu"]',
+      ];
+      for (const mSel of moreBtnSelectors) {
+        const moreBtn = await page.$(mSel);
+        if (moreBtn) {
+          try {
+            await moreBtn.click({ force: true });
+            await randomDelay(1200, 2500);
+            for (const iSel of ['div[role="menuitem"]:has-text("Invite friends")', 'span:has-text("Invite friends")']) {
+              inviteBtn = await page.$(iSel);
+              if (inviteBtn) break;
+            }
+          } catch {}
+          if (inviteBtn) break;
+        }
       }
     }
 
     if (!inviteBtn) {
+      logger.warn('Invite friends button not found on page.');
       return { success: false, action: 'not_found', message: 'Invite friends button not found on page.' };
     }
 
-    await inviteBtn.click();
-    await randomDelay(2000, 4000);
+    try {
+      await inviteBtn.click({ timeout: 6000 });
+    } catch {
+      await inviteBtn.click({ force: true }).catch(async () => {
+        await page.evaluate(el => el.click(), inviteBtn);
+      });
+    }
+    await randomDelay(2500, 4500);
 
     // 2. In the invite dialog, select all or individual friends
-    const selectAllBtn = await page.$('div[role="dialog"] div[role="checkbox"]:has-text("Select all"), div[role="dialog"] span:has-text("Select all")');
+    const selectAllBtn = await page.$('div[role="dialog"] div[role="checkbox"]:has-text("Select all"), div[role="dialog"] span:has-text("Select all"), div[role="dialog"] input[type="checkbox"][aria-label*="Select all" i]');
     let invitedCount = 0;
 
     if (selectAllBtn) {
-      await selectAllBtn.click();
-      await randomDelay(1000, 2000);
+      try {
+        await selectAllBtn.click({ timeout: 4000 });
+      } catch {
+        await selectAllBtn.click({ force: true }).catch(async () => {
+          await page.evaluate(el => el.click(), selectAllBtn);
+        });
+      }
+      await randomDelay(1500, 2500);
       invitedCount = 30;
     } else {
       const checkboxes = await page.$$('div[role="dialog"] input[type="checkbox"], div[role="dialog"] div[role="checkbox"]');
       for (const box of checkboxes.slice(0, maxInvites)) {
-        await box.click();
+        try {
+          await box.click({ timeout: 2000 });
+        } catch {
+          await box.click({ force: true }).catch(async () => {
+            await page.evaluate(el => el.click(), box);
+          });
+        }
         await microDelay(200, 400);
         invitedCount++;
       }
     }
 
     // 3. Click "Send Invites"
-    const sendBtn = await page.$('div[role="dialog"] div[aria-label*="Send" i], div[role="dialog"] div[role="button"]:has-text("Send Invites"), div[role="dialog"] div[role="button"]:has-text("Send invites")');
-    if (sendBtn) {
-      await sendBtn.click();
-      await randomDelay(2500, 4500);
+    const sendBtnSelectors = [
+      'div[role="dialog"] div[aria-label*="Send" i]',
+      'div[role="dialog"] div[role="button"]:has-text("Send Invites")',
+      'div[role="dialog"] div[role="button"]:has-text("Send invites")',
+      'div[role="dialog"] button:has-text("Send Invites")',
+    ];
+    let sendBtn = null;
+    for (const sSel of sendBtnSelectors) {
+      sendBtn = await page.$(sSel);
+      if (sendBtn) break;
     }
 
-    await saveCookies(context);
+    if (sendBtn) {
+      try {
+        await sendBtn.click({ timeout: 6000 });
+      } catch {
+        await sendBtn.click({ force: true }).catch(async () => {
+          await page.evaluate(el => el.click(), sendBtn);
+        });
+      }
+      await randomDelay(3000, 5000);
+    }
+
+    await saveCookies(context, { asPage: false });
     logger.info(`✓ Successfully sent Page invites on: ${pageUrl}`);
     return { success: true, action: 'page_invites_sent', count: invitedCount, pageUrl };
 

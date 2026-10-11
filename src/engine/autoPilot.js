@@ -21,8 +21,15 @@ const DEFAULT_KEYWORDS = [
   'remodeling contractor',
 ];
 
+const PAGE_TARGET_URL = 'https://www.facebook.com/profile.php?id=61588703994992';
+const PERSONAL_TARGET_URL = 'https://www.facebook.com/';
+
 let lastPostTime = 0;
 const POST_INTERVAL_MS = 4 * 60 * 60 * 1000; // Auto-post once every 4 hours
+let postTargetToggle = false; // Alternates: true = HexNemesis Productions Page, false = Personal Timeline
+
+let lastInviteTime = 0;
+const INVITE_INTERVAL_MS = 12 * 60 * 60 * 1000; // Auto-invite newly accepted friends to Page every 12 hours
 
 /**
  * Auto-Pilot Discovery Engine:
@@ -33,17 +40,39 @@ async function runAutoPilotCycle() {
 
   logger.info(`[AutoPilot] Running self-driven discovery check (Pending tasks: ${stats.pending})`);
 
-  // 1. Auto-Schedule Promotional Post if 4 hours have passed
   const now = Date.now();
+
+  // 1. Auto-Schedule Promotional Post if 4 hours have passed (Rotating between Page & Personal)
   if (now - lastPostTime > POST_INTERVAL_MS) {
-    logger.info('[AutoPilot] Auto-queuing promotional post for hexnemesis.com');
+    const isPage = postTargetToggle;
+    postTargetToggle = !postTargetToggle; // alternate for next rotation
+    const targetUrl = isPage ? PAGE_TARGET_URL : PERSONAL_TARGET_URL;
+    const destName = isPage ? 'HexNemesis Productions Page' : 'Personal Timeline';
+
+    logger.info(`[AutoPilot] Auto-queuing promotional post for hexnemesis.com on ${destName}`);
     addTask({
       action: 'post',
-      target: 'https://www.facebook.com/',
-      payload: { promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com' },
-      priority: 2,
+      target: targetUrl,
+      payload: {
+        promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html',
+        asPage: isPage,
+        topic: isPage ? 'digital tools for custom builders, carpenters, and contractors' : 'carpentry craftsmanship, framing calculations, and builder precision software',
+      },
+      priority: 3,
     });
     lastPostTime = now;
+  }
+
+  // 2. Auto-Schedule Page Invites (Every 12 hours, invite personal friends to follow HexNemesis Productions Page)
+  if (now - lastInviteTime > INVITE_INTERVAL_MS) {
+    logger.info('[AutoPilot] Auto-queuing scheduled friend invite cycle for HexNemesis Productions Page');
+    addTask({
+      action: 'invite_page',
+      target: PAGE_TARGET_URL,
+      payload: { maxInvites: 30 },
+      priority: 2,
+    });
+    lastInviteTime = now;
   }
 
   // 2. If pending tasks are sufficient (>= 5), let worker process existing tasks

@@ -5,40 +5,55 @@ const path = require('path');
 const logger = require('../utils/logger');
 const { config } = require('../config');
 
-const COOKIE_PATH = path.resolve(config.paths.cookies);
+const PERSONAL_COOKIE_PATH = path.resolve(config.paths.cookies || './cookies/session.json');
+const PAGE_COOKIE_PATH = path.resolve('./cookies/page_session.json');
+const PAGE_ID = '61588703994992'; // HexNemesis Productions Page ID
 
 /**
  * Load session cookies from disk and inject them into a browser context.
- * This is the recommended approach — log in manually once, export cookies,
- * then reuse the session without triggering automated login detection.
- *
- * HOW TO EXPORT YOUR COOKIES:
- * 1. Install the "Cookie-Editor" Chrome extension:
- *    → https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm
- * 2. Log in to Facebook in Chrome normally.
- * 3. Click the Cookie-Editor extension icon.
- * 4. Click "Export" → "Export as JSON".
- * 5. Save the file as: cookies/session.json  (in this project directory)
- * 6. Run the bot — it will inject your session automatically.
+ * Supports switching dynamically between Personal profile and HexNemesis Productions Page.
  *
  * @param {import('playwright').BrowserContext} context
- * @returns {boolean} true if cookies were loaded, false if no cookie file found
+ * @param {Object} [opts={}]
+ * @param {boolean} [opts.asPage=false] - Whether to load the session as HexNemesis Productions Page
+ * @param {string} [opts.cookiePath] - Explicit path to cookie file
+ * @returns {Promise<boolean>}
  */
-async function loadCookies(context) {
-  if (!fs.existsSync(COOKIE_PATH)) {
-    logger.warn(
-      'No session cookies found at ' + COOKIE_PATH + '\n' +
-      '  → The bot will run as a logged-out user (limited data access).\n' +
-      '  → See README.md for cookie export instructions.'
-    );
+async function loadCookies(context, opts = {}) {
+  const asPage = Boolean(opts.asPage);
+  const targetPath = opts.cookiePath
+    ? path.resolve(opts.cookiePath)
+    : (asPage && fs.existsSync(PAGE_COOKIE_PATH) ? PAGE_COOKIE_PATH : PERSONAL_COOKIE_PATH);
+
+  if (!fs.existsSync(targetPath)) {
+    logger.warn(`No session cookies found at ${targetPath}`);
     return false;
   }
 
   try {
-    const raw = fs.readFileSync(COOKIE_PATH, 'utf8');
-    const cookies = JSON.parse(raw);
+    const raw = fs.readFileSync(targetPath, 'utf8');
+    let cookies = JSON.parse(raw);
 
-    // Playwright expects cookies in a specific format
+    // If asPage is true, guarantee i_user is present with PAGE_ID
+    if (asPage) {
+      const hasIUser = cookies.some(c => c.name === 'i_user');
+      if (!hasIUser) {
+        cookies.push({
+          name: 'i_user',
+          value: PAGE_ID,
+          domain: '.facebook.com',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: true,
+          sameSite: 'None',
+        });
+      }
+    } else {
+      // If running personal profile, strip i_user so it acts strictly as the personal user
+      cookies = cookies.filter(c => c.name !== 'i_user');
+    }
+
     const formatted = cookies.map((c) => ({
       name: c.name,
       value: c.value,
@@ -46,12 +61,12 @@ async function loadCookies(context) {
       path: c.path || '/',
       expires: c.expirationDate || c.expires || -1,
       httpOnly: c.httpOnly || false,
-      secure: c.secure || true,
+      secure: c.secure !== undefined ? c.secure : true,
       sameSite: normalizeSameSite(c.sameSite),
     }));
 
     await context.addCookies(formatted);
-    logger.info(`Loaded ${formatted.length} session cookies from ${COOKIE_PATH}`);
+    logger.info(`Loaded ${formatted.length} cookies (asPage: ${asPage}) from ${targetPath}`);
     return true;
   } catch (err) {
     logger.error('Failed to load cookies: ' + err.message);
@@ -61,14 +76,17 @@ async function loadCookies(context) {
 
 /**
  * Save the current browser context cookies back to disk.
- * Useful for refreshing the session after browsing.
  * @param {import('playwright').BrowserContext} context
+ * @param {Object} [opts={}]
+ * @param {boolean} [opts.asPage=false]
  */
-async function saveCookies(context) {
+async function saveCookies(context, opts = {}) {
   try {
+    const asPage = Boolean(opts.asPage);
+    const savePath = asPage ? PAGE_COOKIE_PATH : PERSONAL_COOKIE_PATH;
     const cookies = await context.cookies();
-    fs.writeFileSync(COOKIE_PATH, JSON.stringify(cookies, null, 2));
-    logger.info(`Saved ${cookies.length} cookies to ${COOKIE_PATH}`);
+    fs.writeFileSync(savePath, JSON.stringify(cookies, null, 2));
+    logger.info(`Saved ${cookies.length} cookies (asPage: ${asPage}) to ${savePath}`);
   } catch (err) {
     logger.error('Failed to save cookies: ' + err.message);
   }
@@ -83,4 +101,5 @@ function normalizeSameSite(value) {
   return map[value.toLowerCase()] || 'Lax';
 }
 
-module.exports = { loadCookies, saveCookies };
+module.exports = { loadCookies, saveCookies, PAGE_ID, PERSONAL_COOKIE_PATH, PAGE_COOKIE_PATH };
+
