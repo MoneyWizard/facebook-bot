@@ -94,9 +94,15 @@ async function followUser(urlOrUsername) {
     const btnText = (await followBtn.innerText().catch(() => 'Follow')).trim();
     logger.info(`Clicking "${btnText}" button...`);
 
-    await followBtn.scrollIntoViewIfNeeded();
+    await followBtn.scrollIntoViewIfNeeded().catch(() => {});
     await microDelay(300, 700);
-    await followBtn.click();
+    try {
+      await followBtn.click({ timeout: 5000 });
+    } catch {
+      await followBtn.click({ force: true, timeout: 5000 }).catch(async () => {
+        await page.evaluate(el => el.click(), followBtn);
+      });
+    }
     await randomDelay(1500, 3000);
 
     // Verify the action worked — button should now show "Following" or "Requested"
@@ -198,12 +204,21 @@ async function findButtonByText(page, texts) {
         `div[aria-label*="${text}" i]`,
         `div[role="button"]:has-text("${text}")`,
         `button:has-text("${text}")`,
-        `span:has-text("${text}")`,
         `a[role="button"]:has-text("${text}")`,
       ];
       for (const sel of selectors) {
-        const el = await page.$(sel);
-        if (el && await el.isVisible().catch(() => false)) return el;
+        const els = await page.$$(sel);
+        for (const el of els) {
+          if (!await el.isVisible().catch(() => false)) continue;
+          const elText = (await el.innerText().catch(() => '')).trim();
+          const ariaLabel = (await el.getAttribute('aria-label').catch(() => ''))?.trim() || '';
+
+          // Filter out static counter strings like "Followed by 4.9K"
+          if (/followed by/i.test(elText) || /followed by/i.test(ariaLabel)) continue;
+          if (/followers/i.test(elText) || (/following/i.test(elText) && text !== 'Following')) continue;
+
+          return el;
+        }
       }
     } catch {}
   }
