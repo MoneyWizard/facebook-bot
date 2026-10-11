@@ -8,6 +8,15 @@ const { init: initDb } = require('../utils/storage');
 const { startScheduler } = require('../scheduler/cron');
 const logger = require('../utils/logger');
 
+// ─── Process Fault Tolerance ──────────────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  logger.error(`[Process] Caught unhandled exception: ${err.message}`);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error(`[Process] Caught unhandled rejection: ${reason?.message || reason}`);
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 const scrapeRoute   = require('./routes/scrape');
 const searchRoute   = require('./routes/search');

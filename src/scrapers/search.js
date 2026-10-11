@@ -110,8 +110,8 @@ async function searchPeople(query, opts = {}) {
     logger.error(`People search failed: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 

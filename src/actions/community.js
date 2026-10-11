@@ -76,8 +76,8 @@ async function createPage(opts = {}) {
     logger.error(`createPage error: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 
@@ -138,8 +138,8 @@ async function createGroup(opts = {}) {
     logger.error(`createGroup error: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 
@@ -196,8 +196,8 @@ async function inviteFriendsToGroup(groupUrl, maxInvites = 20) {
     logger.error(`inviteFriendsToGroup error: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 
@@ -273,8 +273,8 @@ async function inviteFriendsToPage(pageUrl = 'https://www.facebook.com/profile.p
     logger.error(`inviteFriendsToPage error: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 

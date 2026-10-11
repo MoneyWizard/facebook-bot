@@ -124,8 +124,8 @@ async function followUser(urlOrUsername) {
     logger.error(`followUser failed: ${err.message}`);
     throw err;
   } finally {
-    await context.close();
-    await browser.close();
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
   }
 }
 
