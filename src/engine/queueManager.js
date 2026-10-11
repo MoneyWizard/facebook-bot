@@ -133,6 +133,7 @@ function getQueueStats() {
   initQueue();
   const db = getDb();
   const queue = db.get('queue').value() || [];
+  const tc = getTodayCounts() || {};
 
   return {
     total: queue.length,
@@ -140,7 +141,10 @@ function getQueueStats() {
     processing: queue.filter(t => t.status === 'processing').length,
     completed: queue.filter(t => t.status === 'completed').length,
     failed: queue.filter(t => t.status === 'failed').length,
-    todayCounts: getTodayCounts(),
+    todayCounts: tc,
+    postsToday: tc.post || 0,
+    engagementsToday: (tc.comment || 0) + (tc.like || 0),
+    friendsToday: tc.addFriend || 0,
   };
 }
 

@@ -169,23 +169,35 @@
   <script>
     async function fetchStats() {
       try {
-        const res = await fetch('/api/queue/stats');
+        const res = await fetch('/api/queue/stats?_t=' + Date.now());
         const stats = await res.json();
-        document.getElementById('statTotal').innerText = stats.total || 0;
-        document.getElementById('statPending').innerText = stats.pending || 0;
-        document.getElementById('statCompleted').innerText = stats.completed || 0;
 
-        // Daily Limit & Action Counters
+        const elTotal = document.getElementById('statTotal');
+        const elPending = document.getElementById('statPending');
+        const elCompleted = document.getElementById('statCompleted');
+        if (elTotal) elTotal.innerText = stats.total ?? 0;
+        if (elPending) elPending.innerText = stats.pending ?? 0;
+        if (elCompleted) elCompleted.innerText = stats.completed ?? 0;
+
+        // Daily Limit & Action Counters (Live Telemetry)
         const tc = stats.todayCounts || {};
-        document.getElementById('statPosts').innerText = tc.post || 0;
-        document.getElementById('statEngagements').innerText = (tc.comment || 0) + (tc.like || 0);
-        document.getElementById('statFriends').innerText = tc.addFriend || 0;
+        const postsCount = stats.postsToday ?? tc.post ?? 0;
+        const engCount = stats.engagementsToday ?? ((tc.comment || 0) + (tc.like || 0));
+        const friendsCount = stats.friendsToday ?? tc.addFriend ?? 0;
 
-        const queueRes = await fetch('/api/queue?limit=15');
+        const elPosts = document.getElementById('statPosts');
+        const elEng = document.getElementById('statEngagements');
+        const elFriends = document.getElementById('statFriends');
+
+        if (elPosts) elPosts.innerText = postsCount;
+        if (elEng) elEng.innerText = engCount;
+        if (elFriends) elFriends.innerText = friendsCount;
+
+        const queueRes = await fetch('/api/queue?limit=15&_t=' + Date.now());
         const queueData = await queueRes.json();
         renderQueue(queueData.items || []);
 
-        const leadsRes = await fetch('/api/leads');
+        const leadsRes = await fetch('/api/leads?_t=' + Date.now());
         const leadsData = await leadsRes.json();
         renderLeads(leadsData.leads || []);
       } catch (e) {
@@ -196,7 +208,8 @@
     function renderLeads(leads) {
       const tbody = document.getElementById('leadsTableBody');
       const badge = document.getElementById('leadCountBadge');
-      badge.innerText = `${leads.length} Total Leads`;
+      if (badge) badge.innerText = `${leads.length} Total Leads`;
+      if (!tbody) return;
 
       if (!leads.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No leads discovered yet. The engine will record them as it searches.</td></tr>';
@@ -224,6 +237,7 @@
 
     function renderQueue(items) {
       const tbody = document.getElementById('queueTableBody');
+      if (!tbody) return;
       if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">Queue is currently empty. Auto-Pilot will discover new leads shortly.</td></tr>';
         return;
@@ -306,7 +320,8 @@
     }
 
     function refreshData() {
-      fetchStats();
+      // Force instant browser reload bypassing cache
+      window.location.href = '/?nocache=' + Date.now();
     }
 
     fetchStats();
