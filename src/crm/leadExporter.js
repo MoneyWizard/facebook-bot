@@ -79,6 +79,8 @@ function getLeads() {
         bio: matches[4]?.replace(/"/g, '') || '',
         status: matches[5]?.replace(/"/g, '') || 'Discovered',
         date: matches[6]?.replace(/"/g, '') || '',
+        tier: matches[8]?.replace(/"/g, '') || 'PROSPECT',
+        score: matches[9] ? parseInt(matches[9], 10) : 60,
       });
     }
   }

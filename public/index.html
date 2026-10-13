@@ -94,8 +94,17 @@
           <button onclick="triggerAction('ig_engage')" class="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-brands fa-instagram mr-1"></i> Instagram Outreach
           </button>
-          <button onclick="triggerAction('create_group')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-            <i class="fa-solid fa-users mr-1"></i> Auto-Create FB Group
+          <button onclick="triggerAction('warm_dm')" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-comment-dots mr-1"></i> Warm DM Strike
+          </button>
+          <button onclick="triggerAction('ig_story_snipe')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-crosshairs mr-1"></i> Story Sniper
+          </button>
+          <button onclick="triggerAction('generate_visual')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-drafting-compass mr-1"></i> Blueprint Card
+          </button>
+          <button onclick="triggerAction('scrub_leads')" class="bg-teal-700 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-filter mr-1"></i> Scrub & Score Whales
           </button>
           <button onclick="triggerAction('clear_queue')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition">
             <i class="fa-solid fa-trash-can mr-1"></i> Clear Completed
@@ -219,23 +228,31 @@
         return;
       }
 
-      tbody.innerHTML = leads.map(l => `
-        <tr class="hover:bg-slate-800/30 transition">
-          <td class="p-4 font-semibold text-white">${l.name}</td>
-          <td class="p-4 font-mono text-xs text-cyan-400">
-            <a href="${l.url}" target="_blank" class="hover:underline flex items-center gap-1">
-              ${l.url} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-            </a>
-          </td>
-          <td class="p-4 text-xs text-slate-300">${l.location || 'N/A'}</td>
-          <td class="p-4">
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
-              ${l.status}
-            </span>
-          </td>
-          <td class="p-4 text-xs text-slate-400">${l.date}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = leads.map(l => {
+        const tierBadge = l.tier === 'WHALE'
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-700 mr-1.5 shadow-sm">👑 WHALE</span>'
+          : (l.tier === 'PRO' ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950 text-cyan-400 border border-cyan-800 mr-1.5">⚡ PRO</span>' : '');
+
+        return `
+          <tr class="hover:bg-slate-800/30 transition">
+            <td class="p-4 font-semibold text-white flex items-center">
+              ${tierBadge}${l.name}
+            </td>
+            <td class="p-4 font-mono text-xs text-cyan-400">
+              <a href="${l.url}" target="_blank" class="hover:underline flex items-center gap-1">
+                ${l.url} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </a>
+            </td>
+            <td class="p-4 text-xs text-slate-300">${l.location || 'N/A'}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                ${l.status}
+              </span>
+            </td>
+            <td class="p-4 text-xs text-slate-400">${l.date}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function renderQueue(items) {
@@ -315,20 +332,41 @@
             payload: { promoLink: 'https://hexnemesis.com/home.html' }
           })
         });
-      } else if (action === 'create_group') {
+      } else if (action === 'warm_dm') {
         await fetch('/api/queue/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'create_group',
-            target: 'https://www.facebook.com/groups/create/',
+            action: 'warm_dm',
+            target: 'crm_leads',
             priority: 5,
-            payload: {
-              name: 'Carpenters & Builders Precision Tools Hub',
-              privacy: 'Public'
-            }
+            payload: { limit: 2 }
           })
         });
+      } else if (action === 'ig_story_snipe') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'ig_story_snipe',
+            target: 'framingcontractor',
+            priority: 5,
+            payload: { maxStories: 2 }
+          })
+        });
+      } else if (action === 'generate_visual') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate_visual',
+            target: 'blueprint_card',
+            priority: 5,
+            payload: { type: 'rafter' }
+          })
+        });
+      } else if (action === 'scrub_leads') {
+        await fetch('/api/leads/scrub', { method: 'POST' });
       } else if (action === 'clear_queue') {
         await fetch('/api/queue?status=completed', { method: 'DELETE' });
       }

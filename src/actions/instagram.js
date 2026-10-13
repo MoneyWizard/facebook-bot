@@ -274,4 +274,99 @@ async function engageInstagram(hashtagOrUrl = 'carpenter', opts = {}) {
   }
 }
 
-module.exports = { engageInstagram, ensureInstagramLogin };
+/**
+ * View contractor stories and send direct push reactions (🔥).
+ * Bypasses feed comments and delivers direct message alerts to their phone lock screens.
+ *
+ * @param {string} [targetOrTag='framingcontractor']
+ * @param {Object} [opts={}]
+ * @returns {Promise<Object>}
+ */
+async function snipeStories(targetOrTag = 'framingcontractor', opts = {}) {
+  logger.info(`[Instagram] Commencing Story Sniping raid on target: ${targetOrTag}`);
+
+  const { browser, identity } = await launchBrowser();
+  const context = await createContext(browser, identity);
+  const page = await context.newPage();
+
+  let reactedCount = 0;
+  const snipedAccounts = [];
+
+  try {
+    await loadIgSession(context);
+    await ensureInstagramLogin(page);
+
+    // If target is a tag, find recent active builder profiles
+    const cleanTag = targetOrTag.replace(/^#/, '').replace(/\/$/, '').trim();
+    const tagUrl = targetOrTag.startsWith('http')
+      ? targetOrTag
+      : `https://www.instagram.com/explore/tags/${encodeURIComponent(cleanTag)}/`;
+
+    await page.goto(tagUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
+    await randomDelay(2500, 4500);
+
+    // Extract recent post authors
+    const postLinks = await page.$$eval('a[href*="/p/"], a[href*="/reel/"]', (els) =>
+      Array.from(new Set(els.map(e => e.href))).slice(0, 4)
+    ).catch(() => []);
+
+    for (const postUrl of postLinks) {
+      if (reactedCount >= (opts.maxStories || 2)) break;
+
+      try {
+        await page.goto(postUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
+        await randomDelay(2000, 3500);
+
+        // Find author link
+        const authorHref = await page.$eval('header a[href^="/"]', el => el.getAttribute('href')).catch(() => null);
+        if (!authorHref) continue;
+
+        const handle = authorHref.replace(/\//g, '').trim();
+        if (!handle || ['explore', 'reels', 'direct'].includes(handle)) continue;
+
+        // Visit author profile
+        await page.goto(`https://www.instagram.com/${handle}/`, { waitUntil: 'domcontentloaded', timeout: 25000 });
+        await randomDelay(2000, 4000);
+
+        // Check if author has an active story (canvas or story ring)
+        const storyTrigger = await page.$('header div[role="button"] canvas, header [aria-disabled="false"] canvas, header button:has(img)');
+        if (storyTrigger) {
+          logger.info(`[Instagram] Active story detected for contractor @${handle}. Launching strike...`);
+          await storyTrigger.click();
+          await randomDelay(2500, 4000);
+
+          // Find story like button or reply box
+          const likeBtn = await page.$('svg[aria-label="Like"], span:has-text("Like"), div[role="button"][aria-label*="Like" i]');
+          if (likeBtn) {
+            await likeBtn.click();
+            await randomDelay(1000, 2000);
+            logger.info(`[Instagram] 🔥 Sniped story for @${handle} with direct reaction`);
+            reactedCount++;
+            snipedAccounts.push(handle);
+            recordAction('like');
+          }
+        }
+      } catch (err) {
+        logger.warn(`[Instagram] Story snipe skipped for post: ${err.message}`);
+      }
+    }
+
+    await saveIgSession(context);
+    return { success: true, action: 'story_sniping_complete', reactedCount, snipedAccounts };
+
+  } catch (err) {
+    logger.error(`[Instagram] snipeStories error: ${err.message}`);
+    throw err;
+  } finally {
+    try { await context.close(); } catch {}
+    try { await browser.close(); } catch {}
+  }
+}
+
+module.exports = {
+  engageInstagram,
+  ensureInstagramLogin,
+  snipeStories,
+  loadIgSession,
+  saveIgSession,
+};

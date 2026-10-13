@@ -82,11 +82,16 @@ app.use('/api/queue',          queueRoute);
 
 // ─── Lead CRM Routes ─────────────────────────────────────────────────────────
 const { getLeads, CSV_FILE } = require('../crm/leadExporter');
+const { scrubAndScoreLeads } = require('../crm/leadScrubber');
 app.get('/api/leads', (_req, res) => {
   res.json({ count: getLeads().length, leads: getLeads() });
 });
 app.get('/api/leads/download', (_req, res) => {
   res.download(CSV_FILE, 'contractor-leads.csv');
+});
+app.post('/api/leads/scrub', (_req, res) => {
+  const result = scrubAndScoreLeads();
+  res.json(result);
 });
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────

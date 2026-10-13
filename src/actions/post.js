@@ -1,10 +1,12 @@
 'use strict';
 
+const fs = require('fs');
 const { launchBrowser, createContext } = require('../browser/launcher');
 const { loadCookies, saveCookies } = require('../browser/cookies');
 const { randomDelay, simulateMouseMove, humanType, microDelay } = require('../utils/humanBehavior');
 const { warmupSession, canPerformAction, recordAction } = require('../utils/sessionBehavior');
 const { generatePostContent } = require('../ai/promoter');
+const { generateVisualDiagram } = require('./visualGenerator');
 const logger = require('../utils/logger');
 
 /**
@@ -96,6 +98,36 @@ async function createPost(opts = {}) {
     // Type post text using human typing delays
     await humanType(page, inputSelector, postText);
     await randomDelay(2500, 4500);
+
+    // Attach high-contrast architectural diagram if enabled
+    let attachedImage = null;
+    if (opts.attachDiagram !== false) {
+      try {
+        const diagramTypes = ['rafter', 'stairs', 'cabinetry'];
+        const chosenType = opts.diagramType || diagramTypes[Math.floor(Math.random() * diagramTypes.length)];
+        const imagePath = opts.imagePath || await generateVisualDiagram(chosenType);
+
+        if (imagePath && fs.existsSync(imagePath)) {
+          let fileInput = await page.$('div[role="dialog"] input[type="file"]');
+          if (!fileInput) {
+            const photoBtn = await page.$('div[role="dialog"] div[aria-label*="Photo/video" i], div[role="dialog"] div[aria-label*="Add to your post" i]');
+            if (photoBtn) {
+              await photoBtn.click().catch(() => {});
+              await randomDelay(1000, 2000);
+            }
+            fileInput = await page.$('div[role="dialog"] input[type="file"]');
+          }
+          if (fileInput) {
+            await fileInput.setInputFiles(imagePath);
+            attachedImage = imagePath;
+            logger.info(`[Action] Attached blueprint diagram to post: ${imagePath}`);
+            await randomDelay(3000, 5000);
+          }
+        }
+      } catch (attachErr) {
+        logger.warn(`Could not attach diagram to post: ${attachErr.message}`);
+      }
+    }
 
     // Find and click "Post" button
     const postBtnSelectors = [

@@ -45,6 +45,15 @@ const INVITE_INTERVAL_MS = 12 * 60 * 60 * 1000; // Auto-invite newly accepted fr
 let lastIgTime = 0;
 const IG_INTERVAL_MS = 2 * 60 * 60 * 1000; // Auto-engage linked Instagram contractor hashtags every 2 hours
 
+let lastWarmDmTime = 0;
+const WARM_DM_INTERVAL_MS = 3 * 60 * 60 * 1000; // Auto-strike warm contractor DMs every 3 hours
+
+let lastStorySnipeTime = 0;
+const STORY_SNIPE_INTERVAL_MS = 4 * 60 * 60 * 1000; // Auto-snipe Instagram contractor stories every 4 hours
+
+let lastScrubTime = 0;
+const SCRUB_INTERVAL_MS = 6 * 60 * 60 * 1000; // Auto-scrub and score CRM leads every 6 hours
+
 /**
  * Auto-Pilot Discovery Engine:
  * Generates tasks automatically whenever the queue is low, ensuring the bot runs 100% on its own.
@@ -102,7 +111,43 @@ async function runAutoPilotCycle() {
     lastIgTime = now;
   }
 
-  // 4. If pending tasks are sufficient (>= 5), let worker process existing tasks
+  // 4. Auto-Schedule Warm DM Outreach to Qualified Leads (Every 3 hours)
+  if (now - lastWarmDmTime > WARM_DM_INTERVAL_MS) {
+    logger.info('[AutoPilot] Auto-queuing Warm DM strike for qualified contractor leads');
+    addTask({
+      action: 'warm_dm',
+      target: 'crm_leads',
+      payload: { limit: 2 },
+      priority: 3,
+    });
+    lastWarmDmTime = now;
+  }
+
+  // 5. Auto-Schedule Instagram Story Sniping (Every 4 hours)
+  if (now - lastStorySnipeTime > STORY_SNIPE_INTERVAL_MS) {
+    const snipeTag = IG_HASHTAGS[Math.floor(Math.random() * IG_HASHTAGS.length)];
+    logger.info(`[AutoPilot] Auto-queuing Instagram Story Sniping for #${snipeTag}`);
+    addTask({
+      action: 'ig_story_snipe',
+      target: snipeTag,
+      payload: { maxStories: 2 },
+      priority: 2,
+    });
+    lastStorySnipeTime = now;
+  }
+
+  // 6. Auto-Schedule CRM Scrubbing & Whale Qualification (Every 6 hours)
+  if (now - lastScrubTime > SCRUB_INTERVAL_MS) {
+    logger.info('[AutoPilot] Auto-queuing CRM Lead Scrub & Whale Scoring');
+    addTask({
+      action: 'scrub_leads',
+      target: 'crm_database',
+      priority: 1,
+    });
+    lastScrubTime = now;
+  }
+
+  // 7. If pending tasks are sufficient (>= 5), let worker process existing tasks
   if (stats.pending >= 5) {
     logger.debug('[AutoPilot] Queue has sufficient pending tasks.');
     return;

@@ -10,7 +10,10 @@ const { engageWithContent } = require('../actions/engage');
 const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
 const { joinGroup, engageGroup } = require('../actions/groups');
 const { createPage, createGroup, inviteFriendsToGroup, inviteFriendsToPage } = require('../actions/community');
-const { engageInstagram } = require('../actions/instagram');
+const { engageInstagram, snipeStories } = require('../actions/instagram');
+const { processWarmDMs } = require('../actions/warmDM');
+const { scrubAndScoreLeads } = require('../crm/leadScrubber');
+const { generateVisualDiagram } = require('../actions/visualGenerator');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -66,6 +69,20 @@ async function executeTask(task) {
 
     case 'dm':
       return await sendDM(target, payload?.text || 'Hello!');
+
+    case 'warm_dm':
+      return await processWarmDMs(payload);
+
+    case 'ig_story_snipe':
+      return await snipeStories(target || 'framingcontractor', payload);
+
+    case 'scrub_leads':
+      return await scrubAndScoreLeads();
+
+    case 'generate_visual': {
+      const visualPath = await generateVisualDiagram(payload?.type || 'rafter');
+      return { success: true, visualPath };
+    }
 
     case 'check_inbox':
       return await checkAndReplyInbox();
@@ -129,6 +146,8 @@ async function workerLoop() {
       'cancel_request': 'cancelRequest',
       'post': 'post',
       'engage': 'comment',
+      'warm_dm': 'comment',
+      'ig_story_snipe': 'like',
       'scrape_profile': 'scrape',
       'scrape_followers': 'scrape',
     };
