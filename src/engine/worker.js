@@ -10,6 +10,7 @@ const { engageWithContent } = require('../actions/engage');
 const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
 const { joinGroup, engageGroup } = require('../actions/groups');
 const { createPage, createGroup, inviteFriendsToGroup, inviteFriendsToPage } = require('../actions/community');
+const { engageInstagram } = require('../actions/instagram');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -59,6 +60,9 @@ async function executeTask(task) {
 
     case 'engage':
       return await engageWithContent(target, payload);
+
+    case 'ig_engage':
+      return await engageInstagram(target, payload);
 
     case 'dm':
       return await sendDM(target, payload?.text || 'Hello!');

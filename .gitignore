@@ -1,6 +1,7 @@
 node_modules/
 .env
 cookies/session.json
+cookies/ig_session.json
 logs/*.log
 data/*.json
 data/*.db

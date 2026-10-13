@@ -91,6 +91,9 @@
           <button onclick="triggerAction('invite_page')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-user-plus mr-1"></i> Invite Friends to Page
           </button>
+          <button onclick="triggerAction('ig_engage')" class="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-brands fa-instagram mr-1"></i> Instagram Outreach
+          </button>
           <button onclick="triggerAction('create_group')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-users mr-1"></i> Auto-Create FB Group
           </button>
@@ -297,6 +300,19 @@
             target: 'https://www.facebook.com/profile.php?id=61588703994992',
             priority: 4,
             payload: { maxInvites: 30 }
+          })
+        });
+      } else if (action === 'ig_engage') {
+        const tags = ['carpenter', 'framingcontractor', 'deckbuilder', 'customcabinetry', 'woodworking', 'generalcontractor'];
+        const tag = tags[Math.floor(Math.random() * tags.length)];
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'ig_engage',
+            target: `https://www.instagram.com/explore/tags/${tag}/`,
+            priority: 5,
+            payload: { promoLink: 'https://hexnemesis.com/home.html' }
           })
         });
       } else if (action === 'create_group') {

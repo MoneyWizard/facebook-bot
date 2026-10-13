@@ -90,6 +90,9 @@ async function createPost(opts = {}) {
     const inputSelector = 'div[role="dialog"] div[contenteditable="true"], div[role="dialog"] div[aria-label*="What\'s on your mind" i], div[role="dialog"] div[aria-label*="Create a post" i], div[role="dialog"] div[aria-label*="Write something" i]';
     await page.waitForSelector(inputSelector, { timeout: 15000 });
 
+    // Automatically enable linked Instagram cross-posting if present in composer
+    await enableInstagramCrossPost(page);
+
     // Type post text using human typing delays
     await humanType(page, inputSelector, postText);
     await randomDelay(2500, 4500);
@@ -175,6 +178,26 @@ async function handlePageSwitchPrompt(page) {
       }
     } catch {}
   }
+}
+
+async function enableInstagramCrossPost(page) {
+  try {
+    const igSelectors = [
+      'div[role="dialog"] div[role="checkbox"][aria-label*="Instagram" i][aria-checked="false"]',
+      'div[role="dialog"] input[type="checkbox"][aria-label*="Instagram" i]:not(:checked)',
+      'div[role="dialog"] div[aria-label*="Share to Instagram" i][aria-checked="false"]',
+      'div[role="dialog"] div[role="switch"][aria-label*="Instagram" i][aria-checked="false"]',
+    ];
+    for (const sel of igSelectors) {
+      const toggle = await page.$(sel);
+      if (toggle) {
+        logger.info('[Action] Enabling Instagram cross-posting toggle in post modal');
+        await toggle.click({ force: true }).catch(() => {});
+        await microDelay(400, 800);
+        break;
+      }
+    }
+  } catch {}
 }
 
 async function dismissCookieBanner(page) {

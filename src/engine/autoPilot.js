@@ -21,6 +21,17 @@ const DEFAULT_KEYWORDS = [
   'remodeling contractor',
 ];
 
+const IG_HASHTAGS = [
+  'carpenter',
+  'framingcontractor',
+  'deckbuilder',
+  'customcabinetry',
+  'woodworking',
+  'generalcontractor',
+  'finishcarpentry',
+  'stairbuilder',
+];
+
 const PAGE_TARGET_URL = 'https://www.facebook.com/profile.php?id=61588703994992';
 const PERSONAL_TARGET_URL = 'https://www.facebook.com/';
 
@@ -30,6 +41,9 @@ let postTargetToggle = false; // Alternates: true = HexNemesis Productions Page,
 
 let lastInviteTime = 0;
 const INVITE_INTERVAL_MS = 12 * 60 * 60 * 1000; // Auto-invite newly accepted friends to Page every 12 hours
+
+let lastIgTime = 0;
+const IG_INTERVAL_MS = 2 * 60 * 60 * 1000; // Auto-engage linked Instagram contractor hashtags every 2 hours
 
 /**
  * Auto-Pilot Discovery Engine:
@@ -75,7 +89,20 @@ async function runAutoPilotCycle() {
     lastInviteTime = now;
   }
 
-  // 2. If pending tasks are sufficient (>= 5), let worker process existing tasks
+  // 3. Auto-Schedule Linked Instagram Contractor Outreach (Every 2 hours)
+  if (now - lastIgTime > IG_INTERVAL_MS) {
+    const igTag = IG_HASHTAGS[Math.floor(Math.random() * IG_HASHTAGS.length)];
+    logger.info(`[AutoPilot] Auto-queuing Instagram contractor outreach for #${igTag}`);
+    addTask({
+      action: 'ig_engage',
+      target: `https://www.instagram.com/explore/tags/${igTag}/`,
+      payload: { promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html' },
+      priority: 2,
+    });
+    lastIgTime = now;
+  }
+
+  // 4. If pending tasks are sufficient (>= 5), let worker process existing tasks
   if (stats.pending >= 5) {
     logger.debug('[AutoPilot] Queue has sufficient pending tasks.');
     return;
