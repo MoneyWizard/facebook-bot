@@ -172,11 +172,18 @@ async function engageInstagram(hashtagOrUrl = 'carpenter', opts = {}) {
     await page.goto(chosenPost, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await randomDelay(2500, 4500);
 
-    // Extract author handle if visible
-    const authorHandle = await page.$eval('header a[href^="/"], a[role="link"][href^="/"]', el => {
-      const href = el.getAttribute('href') || '';
-      return href.replace(/\//g, '').trim();
-    }).catch(() => `ig_${cleanTag}_builder`);
+    // Extract author handle if visible (skip root '/' and system nav paths)
+    const authorHandle = await page.$$eval('header a[href^="/"], article a[href^="/"], a[role="link"][href^="/"]', (els) => {
+      const reserved = new Set(['explore', 'reels', 'direct', 'accounts', 'p', 'reel', 'stories', 'about', 'legal']);
+      for (const el of els) {
+        const raw = (el.getAttribute('href') || '').split('?')[0];
+        const parts = raw.split('/').filter(Boolean);
+        if (parts.length === 1 && !reserved.has(parts[0].toLowerCase())) {
+          return parts[0].trim();
+        }
+      }
+      return '';
+    }).catch(() => '') || `ig_${cleanTag}_builder`;
 
     const authorUrl = `https://www.instagram.com/${authorHandle}/`;
 
