@@ -220,10 +220,14 @@ async function randomScroll(page, opts = {}) {
  * @param {string} text
  * @param {Object} opts  { typoRate: 0.03 }
  */
-async function humanType(page, selector, text, opts = {}) {
+async function humanType(page, selectorOrElement, text, opts = {}) {
   const typoRate = opts.typoRate ?? 0.03;
 
-  await page.click(selector);
+  if (typeof selectorOrElement === 'string') {
+    await page.click(selectorOrElement);
+  } else if (selectorOrElement && typeof selectorOrElement.click === 'function') {
+    await selectorOrElement.click();
+  }
   await microDelay(150, 500);
 
   for (let i = 0; i < text.length; i++) {

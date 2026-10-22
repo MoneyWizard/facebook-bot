@@ -60,9 +60,13 @@ async function createBusinessSuitePost(opts = {}) {
     ];
 
     let editor = null;
+    let matchedSelector = null;
     for (const sel of editorSelectors) {
       editor = await page.$(sel);
-      if (editor && await editor.isVisible().catch(() => false)) break;
+      if (editor && await editor.isVisible().catch(() => false)) {
+        matchedSelector = sel;
+        break;
+      }
     }
 
     if (!editor) {
@@ -71,7 +75,7 @@ async function createBusinessSuitePost(opts = {}) {
 
     await editor.click();
     await randomDelay(500, 1200);
-    await humanType(page, editor, postText);
+    await humanType(page, matchedSelector || editor, postText);
     await randomDelay(1500, 3000);
 
     // 2. Attach visual architectural blueprint diagram
