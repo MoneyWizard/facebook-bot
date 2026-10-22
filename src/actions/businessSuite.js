@@ -54,29 +54,37 @@ async function createBusinessSuitePost(opts = {}) {
     }
 
     // 1. Locate text editor area (wait for React SPA to mount)
-    const combinedEditorSelector = 'div[data-lexical-editor="true"], div[role="combobox"], div[role="textbox"], div[contenteditable="true"], textarea';
+    const combinedEditorSelector = 'div[data-lexical-editor="true"], div[role="textbox"], div[contenteditable="true"], textarea';
     await page.waitForSelector(combinedEditorSelector, { timeout: 30000 }).catch(() => {});
 
-    // Ensure Facebook and Instagram placements are enabled
+    // Ensure Facebook and Instagram placements are enabled in the Share To section
     try {
-      const placementCheckboxes = await page.$$('div[role="checkbox"], input[type="checkbox"]');
-      for (const cb of placementCheckboxes) {
-        const isChecked = (await cb.getAttribute('aria-checked')) === 'true' || await cb.isChecked().catch(() => false);
-        if (!isChecked) {
-          await cb.click().catch(() => {});
-          logger.info('[BusinessSuite] Checked placement box for unified cross-posting');
-          await page.waitForTimeout(400);
+      const placementArea = await page.$('span[data-surface*="share_to" i], div[aria-label*="share to" i], div:has-text("Share to")');
+      if (placementArea) {
+        const placementCheckboxes = await placementArea.$$('div[role="checkbox"], input[type="checkbox"]');
+        for (const cb of placementCheckboxes) {
+          const isChecked = (await cb.getAttribute('aria-checked')) === 'true' || await cb.isChecked().catch(() => false);
+          if (!isChecked) {
+            await cb.click().catch(() => {});
+            logger.info('[BusinessSuite] Enabled Share-to placement checkbox');
+            await page.waitForTimeout(300);
+          }
         }
       }
     } catch {}
 
+    // Dismiss any open dropdown popovers or modals
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(500);
+    await dismissOverlays(page);
+
     const editorSelectors = [
       'div[data-lexical-editor="true"]',
-      'div[role="combobox"]',
-      'div[role="textbox"]',
       'div[contenteditable="true"][aria-label*="dialogue box" i]',
       'div[contenteditable="true"][aria-label*="text" i]',
       'div[contenteditable="true"][aria-label*="what\'s on your mind" i]',
+      'div[role="textbox"][contenteditable="true"]',
+      'div[role="textbox"]',
       'div[contenteditable="true"]',
       'textarea',
     ];
@@ -99,7 +107,8 @@ async function createBusinessSuitePost(opts = {}) {
     }
 
     logger.info(`[BusinessSuite] Editor focused via "${matchedSelector || 'element'}"`);
-    await editor.click();
+    await safeClick(page, editor);
+    await editor.evaluate(el => el.focus()).catch(() => {});
     await randomDelay(800, 1500);
     await humanType(page, matchedSelector || editor, postText);
     await randomDelay(1500, 3000);
@@ -113,27 +122,67 @@ async function createBusinessSuitePost(opts = {}) {
         const imagePath = opts.imagePath || await generateVisualDiagram(chosenType);
 
         if (imagePath && fs.existsSync(imagePath)) {
-          // Look for "Add photo/video" or upload button
-          const addPhotoBtn = await page.$('div[role="button"]:has-text("Add photo/video"), button:has-text("Add photo/video"), div[role="button"]:has-text("Add photo")');
-          if (addPhotoBtn) {
-            await addPhotoBtn.click();
-            await randomDelay(1000, 2000);
+          let attached = false;
 
-            // Click "Upload from desktop" option if opened in a popup menu
-            const uploadOption = await page.$('div[role="menuitem"]:has-text("Upload from desktop"), span:has-text("Upload from desktop")');
-            if (uploadOption) {
-              await uploadOption.click();
-              await randomDelay(1000, 2000);
+          // Strategy A: Direct file input already in DOM
+          const existingInput = await page.$('input[type="file"]');
+          if (existingInput) {
+            try {
+              await existingInput.setInputFiles(imagePath);
+              attached = true;
+            } catch {}
+          }
+
+          // Strategy B: File chooser triggered via Add Photo button
+          if (!attached) {
+            const addPhotoBtn = await page.$(
+              'div[role="button"]:has-text("Add photo"), button:has-text("Add photo"), ' +
+              'div[role="button"]:has-text("Add media"), button:has-text("Add media"), ' +
+              'div[aria-label*="Add photo" i], div:has-text("Add photo")'
+            );
+
+            if (addPhotoBtn) {
+              try {
+                const [fileChooser] = await Promise.all([
+                  page.waitForEvent('filechooser', { timeout: 4000 }),
+                  safeClick(page, addPhotoBtn),
+                ]);
+                await fileChooser.setFiles(imagePath);
+                attached = true;
+              } catch {
+                // If it opened a menu instead of direct file chooser, click "Upload from desktop"
+                const uploadOption = await page.$('div[role="menuitem"]:has-text("Upload"), span:has-text("Upload"), div:has-text("Upload from desktop")');
+                if (uploadOption) {
+                  try {
+                    const [fileChooser] = await Promise.all([
+                      page.waitForEvent('filechooser', { timeout: 4000 }),
+                      safeClick(page, uploadOption),
+                    ]);
+                    await fileChooser.setFiles(imagePath);
+                    attached = true;
+                  } catch {}
+                }
+              }
             }
           }
 
-          // Locate file input
-          const fileInput = await page.$('input[type="file"]');
-          if (fileInput) {
-            await fileInput.setInputFiles(imagePath);
+          // Strategy C: Check if input[type="file"] mounted after click
+          if (!attached) {
+            const mountedInput = await page.$('input[type="file"]');
+            if (mountedInput) {
+              try {
+                await mountedInput.setInputFiles(imagePath);
+                attached = true;
+              } catch {}
+            }
+          }
+
+          if (attached) {
             attachedImage = imagePath;
             logger.info(`[BusinessSuite] ✓ Attached blueprint visual: ${imagePath}`);
-            await randomDelay(4000, 7000); // Wait for image upload to process
+            await randomDelay(5000, 8000); // Wait for image upload to process
+          } else {
+            logger.warn('[BusinessSuite] Media upload input not found — post proceeded as text-only');
           }
         }
       } catch (attachErr) {
@@ -142,25 +191,50 @@ async function createBusinessSuitePost(opts = {}) {
     }
 
     // 3. Find and click "Publish"
+    // Scroll composer dialog/window to ensure footer is in view
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => {});
+    await page.$$eval('div[role="dialog"]', dialogs => dialogs.forEach(d => d.scrollTo(0, d.scrollHeight))).catch(() => {});
+
     const publishSelectors = [
       'button:has-text("Publish")',
       'div[role="button"]:has-text("Publish")',
-      'div[aria-label="Publish"][role="button"]',
+      'span:has-text("Publish")',
+      'div[aria-label*="Publish" i][role="button"]',
+      'button[aria-label*="Publish" i]',
+      'button:has-text("Share")',
+      'div[role="button"]:has-text("Share")',
+      'span:has-text("Share")',
+      'button:has-text("Post")',
+      'div[role="button"]:has-text("Post")',
     ];
 
     let publishBtn = null;
-    for (const sel of publishSelectors) {
-      publishBtn = await page.$(sel);
-      if (publishBtn && await publishBtn.isVisible().catch(() => false)) break;
+    // Poll for up to 15 seconds for publish button to be ready and enabled
+    for (let attempt = 0; attempt < 5; attempt++) {
+      for (const sel of publishSelectors) {
+        const candidate = await page.$(sel);
+        if (candidate && await candidate.isVisible().catch(() => false)) {
+          publishBtn = candidate;
+          break;
+        }
+      }
+      if (publishBtn) break;
+      await page.waitForTimeout(3000);
     }
 
     if (!publishBtn) {
-      throw new Error('Business Suite Publish button not found.');
+      const debugScreenshot = path.resolve('logs/business-suite-publish-debug.png');
+      await page.screenshot({ path: debugScreenshot, fullPage: true }).catch(() => {});
+      const visibleButtons = await page.$$eval('button, div[role="button"], span[role="button"]', els =>
+        els.map(e => e.innerText?.trim()?.replace(/\s+/g, ' ')).filter(Boolean)
+      ).catch(() => []);
+      logger.error(`[BusinessSuite] Publish button not found. Visible buttons: ${JSON.stringify(visibleButtons)}`);
+      throw new Error(`Business Suite Publish button not found. Visible buttons: [${visibleButtons.slice(0, 15).join(', ')}]`);
     }
 
     logger.info('[BusinessSuite] Clicking "Publish" button...');
     await safeClick(page, publishBtn);
-    await randomDelay(5000, 9000); // Wait for publishing roundtrip
+    await randomDelay(6000, 10000); // Wait for publishing roundtrip
 
     await saveCookies(context, { asPage: true });
     recordAction('post');

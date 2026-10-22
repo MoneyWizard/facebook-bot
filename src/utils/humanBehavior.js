@@ -223,10 +223,28 @@ async function randomScroll(page, opts = {}) {
 async function humanType(page, selectorOrElement, text, opts = {}) {
   const typoRate = opts.typoRate ?? 0.03;
 
-  if (typeof selectorOrElement === 'string') {
-    await page.click(selectorOrElement);
-  } else if (selectorOrElement && typeof selectorOrElement.click === 'function') {
-    await selectorOrElement.click();
+  try {
+    if (typeof selectorOrElement === 'string') {
+      await page.click(selectorOrElement, { timeout: 3000 });
+    } else if (selectorOrElement && typeof selectorOrElement.click === 'function') {
+      await selectorOrElement.click({ timeout: 3000 });
+    }
+  } catch {
+    try {
+      if (typeof selectorOrElement === 'string') {
+        await page.click(selectorOrElement, { force: true, timeout: 3000 });
+      } else if (selectorOrElement && typeof selectorOrElement.click === 'function') {
+        await selectorOrElement.click({ force: true, timeout: 3000 });
+      }
+    } catch {
+      try {
+        if (typeof selectorOrElement === 'string') {
+          await page.$eval(selectorOrElement, el => el.focus());
+        } else if (selectorOrElement) {
+          await page.evaluate(el => el.focus(), selectorOrElement);
+        }
+      } catch {}
+    }
   }
   await microDelay(150, 500);
 
