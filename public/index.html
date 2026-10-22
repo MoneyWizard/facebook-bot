@@ -85,8 +85,11 @@
           <button onclick="triggerAction('post')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-paper-plane mr-1"></i> Force Personal Post
           </button>
-          <button onclick="triggerAction('post_page')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
-            <i class="fa-solid fa-building-flag mr-1"></i> Post to HexNemesis Page
+          <button onclick="triggerAction('business_suite_post')" class="bg-gradient-to-r from-blue-700 to-indigo-700 hover:opacity-90 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-briefcase mr-1"></i> Business Suite (FB+IG)
+          </button>
+          <button onclick="triggerAction('business_suite_inbox')" class="bg-indigo-800 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
+            <i class="fa-solid fa-inbox mr-1"></i> Business Suite Inbox
           </button>
           <button onclick="triggerAction('invite_page')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition">
             <i class="fa-solid fa-user-plus mr-1"></i> Invite Friends to Page
@@ -292,6 +295,30 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'post', target: 'https://www.facebook.com/', priority: 3 })
+        });
+      } else if (action === 'business_suite_post') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'business_suite_post',
+            target: 'https://business.facebook.com/latest/composer',
+            priority: 5,
+            payload: {
+              promoLink: 'https://hexnemesis.com/home.html',
+              topic: 'digital tools for carpenters, framers, and custom builders'
+            }
+          })
+        });
+      } else if (action === 'business_suite_inbox') {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'business_suite_inbox',
+            target: 'https://business.facebook.com/latest/inbox/all',
+            priority: 5
+          })
         });
       } else if (action === 'post_page') {
         await fetch('/api/queue/add', {

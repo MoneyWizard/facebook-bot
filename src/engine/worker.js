@@ -11,6 +11,7 @@ const { sendDM, checkAndReplyInbox } = require('../actions/messenger');
 const { joinGroup, engageGroup } = require('../actions/groups');
 const { createPage, createGroup, inviteFriendsToGroup, inviteFriendsToPage } = require('../actions/community');
 const { engageInstagram, snipeStories } = require('../actions/instagram');
+const { createBusinessSuitePost, checkBusinessSuiteInbox } = require('../actions/businessSuite');
 const { processWarmDMs } = require('../actions/warmDM');
 const { scrubAndScoreLeads } = require('../crm/leadScrubber');
 const { generateVisualDiagram } = require('../actions/visualGenerator');
@@ -84,6 +85,12 @@ async function executeTask(task) {
       return { success: true, visualPath };
     }
 
+    case 'business_suite_post':
+      return await createBusinessSuitePost(payload);
+
+    case 'business_suite_inbox':
+      return await checkBusinessSuiteInbox();
+
     case 'check_inbox':
       return await checkAndReplyInbox();
 
@@ -145,6 +152,7 @@ async function workerLoop() {
       'add_friend': 'addFriend',
       'cancel_request': 'cancelRequest',
       'post': 'post',
+      'business_suite_post': 'post',
       'engage': 'comment',
       'warm_dm': 'comment',
       'ig_story_snipe': 'like',

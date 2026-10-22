@@ -51,6 +51,9 @@ const WARM_DM_INTERVAL_MS = 3 * 60 * 60 * 1000; // Auto-strike warm contractor D
 let lastStorySnipeTime = 0;
 const STORY_SNIPE_INTERVAL_MS = 4 * 60 * 60 * 1000; // Auto-snipe Instagram contractor stories every 4 hours
 
+let lastBusinessInboxTime = 0;
+const BUSINESS_INBOX_INTERVAL_MS = 6 * 60 * 60 * 1000; // Sweep Business Suite unified inbox every 6 hours
+
 let lastScrubTime = 0;
 const SCRUB_INTERVAL_MS = 6 * 60 * 60 * 1000; // Auto-scrub and score CRM leads every 6 hours
 
@@ -65,24 +68,35 @@ async function runAutoPilotCycle() {
 
   const now = Date.now();
 
-  // 1. Auto-Schedule Promotional Post if 4 hours have passed (Rotating between Page & Personal)
+  // 1. Auto-Schedule Promotional Post if 4 hours have passed (Rotating: Personal vs Meta Business Suite FB+IG)
   if (now - lastPostTime > POST_INTERVAL_MS) {
-    const isPage = postTargetToggle;
+    const useBusinessSuite = postTargetToggle;
     postTargetToggle = !postTargetToggle; // alternate for next rotation
-    const targetUrl = isPage ? PAGE_TARGET_URL : PERSONAL_TARGET_URL;
-    const destName = isPage ? 'HexNemesis Productions Page' : 'Personal Timeline';
 
-    logger.info(`[AutoPilot] Auto-queuing promotional post for hexnemesis.com on ${destName}`);
-    addTask({
-      action: 'post',
-      target: targetUrl,
-      payload: {
-        promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html',
-        asPage: isPage,
-        topic: isPage ? 'digital tools for custom builders, carpenters, and contractors' : 'carpentry craftsmanship, framing calculations, and builder precision software',
-      },
-      priority: 3,
-    });
+    if (useBusinessSuite) {
+      logger.info('[AutoPilot] Auto-queuing Meta Business Suite unified post (Facebook Page + Instagram)');
+      addTask({
+        action: 'business_suite_post',
+        target: 'https://business.facebook.com/latest/composer',
+        payload: {
+          promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html',
+          topic: 'digital tools for custom builders, carpenters, and contractors',
+        },
+        priority: 4,
+      });
+    } else {
+      logger.info('[AutoPilot] Auto-queuing personal timeline post with layout blueprint');
+      addTask({
+        action: 'post',
+        target: PERSONAL_TARGET_URL,
+        payload: {
+          promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html',
+          asPage: false,
+          topic: 'carpentry craftsmanship, framing calculations, and builder precision software',
+        },
+        priority: 3,
+      });
+    }
     lastPostTime = now;
   }
 
@@ -147,7 +161,18 @@ async function runAutoPilotCycle() {
     lastScrubTime = now;
   }
 
-  // 7. If pending tasks are sufficient (>= 5), let worker process existing tasks
+  // 7. Auto-Schedule Meta Business Suite Unified Inbox Sweep (Every 6 hours)
+  if (now - lastBusinessInboxTime > BUSINESS_INBOX_INTERVAL_MS) {
+    logger.info('[AutoPilot] Auto-queuing Meta Business Suite Unified Inbox sweep');
+    addTask({
+      action: 'business_suite_inbox',
+      target: 'https://business.facebook.com/latest/inbox/all',
+      priority: 2,
+    });
+    lastBusinessInboxTime = now;
+  }
+
+  // 8. If pending tasks are sufficient (>= 5), let worker process existing tasks
   if (stats.pending >= 5) {
     logger.debug('[AutoPilot] Queue has sufficient pending tasks.');
     return;
