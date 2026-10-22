@@ -3,7 +3,7 @@
 const { launchBrowser, createContext } = require('../browser/launcher');
 const { loadCookies, saveCookies } = require('../browser/cookies');
 const { randomDelay, simulateMouseMove, microDelay } = require('../utils/humanBehavior');
-const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction } = require('../utils/sessionBehavior');
+const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction, safeClick, dismissOverlays } = require('../utils/sessionBehavior');
 const logger = require('../utils/logger');
 
 // Button text variations Facebook uses
@@ -46,6 +46,7 @@ async function followUser(urlOrUsername) {
     await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await randomDelay(2000, 4000);
     await dismissCookieBanner(page);
+    await dismissOverlays(page);
 
     if (await isLoginWall(page)) {
       return { success: false, action: 'login_required', message: 'Session expired or invalid.' };
@@ -80,7 +81,7 @@ async function followUser(urlOrUsername) {
         logger.info(`Follow not available, but "Add Friend" is visible on ${profileUrl}. Clicking Add Friend...`);
         await addFriendBtn.scrollIntoViewIfNeeded();
         await microDelay(300, 700);
-        await addFriendBtn.click();
+        await safeClick(page, addFriendBtn);
         await randomDelay(2000, 4000);
         await saveCookies(context);
         recordAction('addFriend');

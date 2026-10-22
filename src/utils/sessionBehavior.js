@@ -171,9 +171,67 @@ async function maybeTakeBreak(actionCount) {
   }
 }
 
+/**
+ * Dismiss any blocking Facebook modals, interstitials, or alert overlays.
+ */
+async function dismissOverlays(page) {
+  try {
+    const dismissSelectors = [
+      'div[role="dialog"] div[aria-label="Close"]',
+      'div[role="dialog"] [aria-label="Close"]',
+      'div[aria-label="Close"][role="button"]',
+      'div[role="dialog"] div[role="button"]:has-text("OK")',
+      'div[role="dialog"] div[role="button"]:has-text("Close")',
+      'div[role="dialog"] div[role="button"]:has-text("Dismiss")',
+      'div[role="dialog"] div[role="button"]:has-text("Continue")',
+      'span:has-text("We removed your comment") ~ div div[role="button"]',
+      'div[aria-label*="Community Standards" i] div[role="button"]',
+      '[data-cookiebanner="accept_button"]',
+      'button[title="Allow all cookies"]',
+    ];
+
+    for (const sel of dismissSelectors) {
+      const btn = await page.$(sel);
+      if (btn && await btn.isVisible().catch(() => false)) {
+        await btn.click().catch(() => {});
+        logger.debug(`[Overlays] Dismissed popup/modal via: ${sel}`);
+        await page.waitForTimeout(400);
+      }
+    }
+  } catch {}
+}
+
+/**
+ * Robust click handler that falls back to force click and DOM click
+ * if standard Playwright click is blocked by an overlay or animation.
+ */
+async function safeClick(page, element) {
+  if (!element) return false;
+  try {
+    await element.click({ timeout: 5000 });
+    return true;
+  } catch {
+    try {
+      await dismissOverlays(page);
+      await element.click({ force: true, timeout: 5000 });
+      return true;
+    } catch {
+      try {
+        await page.evaluate(el => el.click(), element);
+        return true;
+      } catch (err) {
+        logger.warn(`safeClick failed: ${err.message}`);
+        return false;
+      }
+    }
+  }
+}
+
 module.exports = {
   warmupSession,
   browseProfileBeforeAction,
+  dismissOverlays,
+  safeClick,
   canPerformAction,
   recordAction,
   getTodayCounts,

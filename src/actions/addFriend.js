@@ -3,7 +3,7 @@
 const { launchBrowser, createContext } = require('../browser/launcher');
 const { loadCookies, saveCookies } = require('../browser/cookies');
 const { randomDelay, simulateMouseMove, microDelay } = require('../utils/humanBehavior');
-const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction } = require('../utils/sessionBehavior');
+const { warmupSession, browseProfileBeforeAction, canPerformAction, recordAction, safeClick, dismissOverlays } = require('../utils/sessionBehavior');
 const logger = require('../utils/logger');
 
 const ADD_FRIEND_TEXTS = ['Add Friend', 'Add as Friend'];
@@ -41,6 +41,7 @@ async function addFriend(urlOrUsername) {
     await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await randomDelay(2000, 4000);
     await dismissCookieBanner(page);
+    await dismissOverlays(page);
 
     if (await isLoginWall(page)) {
       return { success: false, action: 'login_required', message: 'Session expired or invalid.' };
@@ -80,7 +81,7 @@ async function addFriend(urlOrUsername) {
 
     await addBtn.scrollIntoViewIfNeeded();
     await microDelay(400, 900);
-    await addBtn.click();
+    await safeClick(page, addBtn);
     await randomDelay(2000, 4000);
 
     // Verify request was sent — button should now show "Friend Request Sent" or "Cancel Request"
