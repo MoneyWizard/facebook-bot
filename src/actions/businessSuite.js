@@ -47,17 +47,36 @@ async function createBusinessSuitePost(opts = {}) {
 
     // Verify we're on the Business Suite Composer
     const pageTitle = await page.title();
+    const currentUrl = page.url();
+    logger.info(`[BusinessSuite] Arrived at: ${currentUrl} (Title: "${pageTitle}")`);
     if (!pageTitle.toLowerCase().includes('business suite')) {
       logger.warn(`Unexpected title on Business Suite: "${pageTitle}"`);
     }
 
     // 1. Locate text editor area (wait for React SPA to mount)
-    const combinedEditorSelector = 'div[role="combobox"], div[contenteditable="true"][aria-label*="dialogue box" i], div[contenteditable="true"], textarea';
-    await page.waitForSelector(combinedEditorSelector, { timeout: 25000 }).catch(() => {});
+    const combinedEditorSelector = 'div[data-lexical-editor="true"], div[role="combobox"], div[role="textbox"], div[contenteditable="true"], textarea';
+    await page.waitForSelector(combinedEditorSelector, { timeout: 30000 }).catch(() => {});
+
+    // Ensure Facebook and Instagram placements are enabled
+    try {
+      const placementCheckboxes = await page.$$('div[role="checkbox"], input[type="checkbox"]');
+      for (const cb of placementCheckboxes) {
+        const isChecked = (await cb.getAttribute('aria-checked')) === 'true' || await cb.isChecked().catch(() => false);
+        if (!isChecked) {
+          await cb.click().catch(() => {});
+          logger.info('[BusinessSuite] Checked placement box for unified cross-posting');
+          await page.waitForTimeout(400);
+        }
+      }
+    } catch {}
 
     const editorSelectors = [
+      'div[data-lexical-editor="true"]',
       'div[role="combobox"]',
+      'div[role="textbox"]',
       'div[contenteditable="true"][aria-label*="dialogue box" i]',
+      'div[contenteditable="true"][aria-label*="text" i]',
+      'div[contenteditable="true"][aria-label*="what\'s on your mind" i]',
       'div[contenteditable="true"]',
       'textarea',
     ];
@@ -73,11 +92,15 @@ async function createBusinessSuitePost(opts = {}) {
     }
 
     if (!editor) {
-      throw new Error('Business Suite Composer text editor not found.');
+      const debugScreenshot = path.resolve('logs/business-suite-debug.png');
+      await page.screenshot({ path: debugScreenshot, fullPage: true }).catch(() => {});
+      logger.error(`[BusinessSuite] Composer text editor not found. Saved debug screenshot to ${debugScreenshot}`);
+      throw new Error(`Business Suite Composer text editor not found. (URL: ${currentUrl})`);
     }
 
+    logger.info(`[BusinessSuite] Editor focused via "${matchedSelector || 'element'}"`);
     await editor.click();
-    await randomDelay(500, 1200);
+    await randomDelay(800, 1500);
     await humanType(page, matchedSelector || editor, postText);
     await randomDelay(1500, 3000);
 
