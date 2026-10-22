@@ -51,9 +51,12 @@ async function createBusinessSuitePost(opts = {}) {
       logger.warn(`Unexpected title on Business Suite: "${pageTitle}"`);
     }
 
-    // 1. Locate text editor area
+    // 1. Locate text editor area (wait for React SPA to mount)
+    const combinedEditorSelector = 'div[role="combobox"], div[contenteditable="true"][aria-label*="dialogue box" i], div[contenteditable="true"], textarea';
+    await page.waitForSelector(combinedEditorSelector, { timeout: 25000 }).catch(() => {});
+
     const editorSelectors = [
-      'div[role="combobox"][contenteditable="true"]',
+      'div[role="combobox"]',
       'div[contenteditable="true"][aria-label*="dialogue box" i]',
       'div[contenteditable="true"]',
       'textarea',
