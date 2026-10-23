@@ -15,6 +15,8 @@ const { createBusinessSuitePost, checkBusinessSuiteInbox } = require('../actions
 const { processWarmDMs } = require('../actions/warmDM');
 const { scrubAndScoreLeads } = require('../crm/leadScrubber');
 const { generateVisualDiagram } = require('../actions/visualGenerator');
+const { generateReelAsset } = require('../actions/videoGenerator');
+const { scrapeMarketplacePredator } = require('../scrapers/marketplacePredator');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -84,6 +86,14 @@ async function executeTask(task) {
       const visualPath = await generateVisualDiagram(payload?.type || 'rafter');
       return { success: true, visualPath };
     }
+
+    case 'generate_reel': {
+      const reelPath = await generateReelAsset(payload?.type);
+      return { success: true, reelPath };
+    }
+
+    case 'marketplace_predator':
+      return await scrapeMarketplacePredator(payload);
 
     case 'business_suite_post':
       return await createBusinessSuitePost(payload);
@@ -158,6 +168,7 @@ async function workerLoop() {
       'ig_story_snipe': 'like',
       'scrape_profile': 'scrape',
       'scrape_followers': 'scrape',
+      'marketplace_predator': 'scrape',
     };
 
     const isTaskAllowed = (task) => {

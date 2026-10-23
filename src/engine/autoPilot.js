@@ -57,6 +57,12 @@ const BUSINESS_INBOX_INTERVAL_MS = 6 * 60 * 60 * 1000; // Sweep Business Suite u
 let lastScrubTime = 0;
 const SCRUB_INTERVAL_MS = 6 * 60 * 60 * 1000; // Auto-scrub and score CRM leads every 6 hours
 
+let lastPredatorTime = 0;
+const PREDATOR_INTERVAL_MS = 6 * 60 * 60 * 1000; // Auto-scrape contractor marketplace intel every 6 hours
+
+let lastReelTime = 0;
+const REEL_INTERVAL_MS = 8 * 60 * 60 * 1000; // Auto-generate 9:16 vertical reel blueprints every 8 hours
+
 /**
  * Auto-Pilot Discovery Engine:
  * Generates tasks automatically whenever the queue is low, ensuring the bot runs 100% on its own.
@@ -172,7 +178,31 @@ async function runAutoPilotCycle() {
     lastBusinessInboxTime = now;
   }
 
-  // 8. If pending tasks are sufficient (>= 5), let worker process existing tasks
+  // 8. Auto-Schedule Marketplace Predator Scraping (Every 6 hours)
+  if (now - lastPredatorTime > PREDATOR_INTERVAL_MS) {
+    const predatorKeyword = DEFAULT_KEYWORDS[Math.floor(Math.random() * DEFAULT_KEYWORDS.length)];
+    logger.info(`[AutoPilot] Auto-queuing Marketplace Predator scraper for "${predatorKeyword}"`);
+    addTask({
+      action: 'marketplace_predator',
+      target: `marketplace:${predatorKeyword}`,
+      payload: { query: predatorKeyword, maxListings: 10 },
+      priority: 3,
+    });
+    lastPredatorTime = now;
+  }
+
+  // 9. Auto-Schedule 9:16 Vertical Reel Asset Rendering (Every 8 hours)
+  if (now - lastReelTime > REEL_INTERVAL_MS) {
+    logger.info('[AutoPilot] Auto-queuing 9:16 vertical Reel blueprint generation');
+    addTask({
+      action: 'generate_reel',
+      target: 'reels_production',
+      priority: 2,
+    });
+    lastReelTime = now;
+  }
+
+  // 10. If pending tasks are sufficient (>= 5), let worker process existing tasks
   if (stats.pending >= 5) {
     logger.debug('[AutoPilot] Queue has sufficient pending tasks.');
     return;

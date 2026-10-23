@@ -6,5 +6,9 @@ logs/*.log
 data/*.json
 data/*.db
 data/generated_visuals/
+data/generated_reels/
+data/*.csv
 cookies/page_session.json
 .DS_Store
+*.env*
+.env

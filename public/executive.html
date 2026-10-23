@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Suite — HexNemesis War Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --mahogany: #1e110b;
+      --leather: #140d0a;
+      --gold: #d4af37;
+      --gold-bright: #ffd700;
+      --gold-dim: rgba(212, 175, 55, 0.25);
+      --brass: #c5a059;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-cyan: #00f2fe;
+      --accent-emerald: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ─── PENTHOUSE SKYLINE BACKGROUND (First Person View) ─── */
+    .penthouse-viewport {
+      position: fixed;
+      top: 0; left: 0; right: 0; height: 50vh;
+      background: 
+        radial-gradient(ellipse at 50% 20%, rgba(20, 30, 50, 0.7) 0%, rgba(5, 8, 15, 0.95) 80%),
+        linear-gradient(180deg, #020408 0%, #0d1527 60%, #1a1510 100%);
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* Window mullions */
+    .window-frame {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(90deg, transparent 24.5%, rgba(10, 15, 25, 0.9) 25%, rgba(10, 15, 25, 0.9) 25.5%, transparent 26%),
+        linear-gradient(90deg, transparent 49.5%, rgba(10, 15, 25, 0.9) 50%, rgba(10, 15, 25, 0.9) 50.5%, transparent 51%),
+        linear-gradient(90deg, transparent 74.5%, rgba(10, 15, 25, 0.9) 75%, rgba(10, 15, 25, 0.9) 75.5%, transparent 76%);
+      pointer-events: none;
+    }
+
+    /* Skyline silhouette & distant skyscraper lights */
+    .skyline {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 180px;
+      background: linear-gradient(0deg, #05080f 20%, transparent 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      opacity: 0.6;
+    }
+    .spire {
+      width: 40px; height: 120px;
+      background: #090e18;
+      border-top: 2px solid rgba(212, 175, 55, 0.4);
+      position: relative;
+    }
+    .spire::after {
+      content: '';
+      position: absolute;
+      top: -15px; left: 19px; width: 2px; height: 15px;
+      background: #ff3366;
+      box-shadow: 0 0 8px #ff3366;
+      animation: beacon 2s infinite ease-in-out;
+    }
+    @keyframes beacon { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+    /* ─── THE EXECUTIVE DESK SURFACE ─── */
+    .executive-desk {
+      position: relative;
+      z-index: 10;
+      margin-top: 25vh;
+      background: 
+        radial-gradient(ellipse at 50% 0%, rgba(65, 35, 20, 0.85) 0%, rgba(20, 11, 7, 0.98) 70%),
+        linear-gradient(180deg, #2a160d 0%, #150b06 100%);
+      border-top: 3px solid var(--gold);
+      box-shadow: 
+        0 -20px 60px rgba(0, 0, 0, 0.9),
+        inset 0 2px 15px rgba(212, 175, 55, 0.4);
+      min-height: 85vh;
+      padding: 40px 60px 80px;
+    }
+
+    /* Ambient Warm Lamp Lighting on Desk */
+    .desk-lamp-glow {
+      position: absolute;
+      top: -120px; right: 15%;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.12) 0%, rgba(212, 175, 55, 0.04) 50%, transparent 70%);
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    /* ─── TOP BAR ON DESK ─── */
+    .desk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 20px;
+    }
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--gold-bright);
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .brand-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--bg-dark);
+      background: var(--gold);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .desk-nav {
+      display: flex;
+      gap: 15px;
+    }
+    .desk-nav a, .desk-nav button {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: var(--text-main);
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .desk-nav a:hover, .desk-nav button:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-bright);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+
+    /* ─── LEATHER DESK BLOTTER & DOSSIER ─── */
+    .blotter-mat {
+      background: 
+        radial-gradient(circle at 50% 50%, rgba(25, 18, 14, 0.95) 0%, rgba(12, 8, 6, 1) 100%);
+      border: 2px solid rgba(197, 160, 89, 0.35);
+      border-radius: 16px;
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.95),
+        inset 0 0 30px rgba(0, 0, 0, 0.8),
+        inset 0 0 0 1px rgba(212, 175, 55, 0.15);
+      padding: 35px 45px;
+      position: relative;
+    }
+
+    /* Brass corner guards */
+    .blotter-mat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 40px; height: 40px;
+      border-top: 3px solid var(--gold);
+      border-left: 3px solid var(--gold);
+      border-top-left-radius: 14px;
+    }
+    .blotter-mat::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0; width: 40px; height: 40px;
+      border-bottom: 3px solid var(--gold);
+      border-right: 3px solid var(--gold);
+      border-bottom-right-radius: 14px;
+    }
+
+    /* ─── DOSSIER HEADER ─── */
+    .dossier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 30px;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+      padding-bottom: 18px;
+    }
+    .dossier-title {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--gold-bright);
+    }
+    .dossier-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .security-stamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      border: 1px solid var(--accent-emerald);
+      padding: 6px 14px;
+      border-radius: 4px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* ─── NEED-TO-KNOW NUMBERS GRID ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+      margin-bottom: 35px;
+    }
+    .kpi-card {
+      background: rgba(10, 15, 24, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 10px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .kpi-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.15);
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--gold);
+    }
+    .kpi-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 34px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .kpi-delta {
+      font-size: 12px;
+      color: var(--accent-emerald);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ─── TACTICAL STRIKE BUTTONS (Gold Bar on Desk) ─── */
+    .strike-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 35px;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      border: 1px dashed rgba(212, 175, 55, 0.3);
+    }
+    .btn-strike {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(140, 100, 20, 0.3) 100%);
+      border: 1px solid var(--gold);
+      color: var(--gold-bright);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-strike:hover {
+      background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%);
+      color: #07090e;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+      transform: translateY(-2px);
+    }
+    .btn-strike:active { transform: translateY(0); }
+
+    /* ─── HISTORICAL DAY-BY-DAY LEDGER (Where Each Day Began) ─── */
+    .ledger-section {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .ledger-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 1.5px;
+      color: var(--gold);
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .ledger-table th {
+      text-align: left;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .ledger-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+    .ledger-table tr:hover td {
+      background: rgba(212, 175, 55, 0.05);
+      color: var(--gold-bright);
+    }
+    .badge-today {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid var(--accent-emerald);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      margin-left: 8px;
+    }
+
+    /* Toast status message */
+    #statusToast {
+      position: fixed;
+      bottom: 30px; right: 40px;
+      background: #0f172a;
+      border: 1px solid var(--gold);
+      color: var(--gold-bright);
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.3);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PENTHOUSE NIGHT SKYLINE (First-Person Backdrop) -->
+  <div class="penthouse-viewport">
+    <div class="window-frame"></div>
+    <div class="skyline">
+      <div class="spire" style="height: 140px; width: 60px;"></div>
+      <div class="spire" style="height: 90px; width: 45px;"></div>
+      <div class="spire" style="height: 160px; width: 75px;"></div>
+      <div class="spire" style="height: 110px; width: 50px;"></div>
+      <div class="spire" style="height: 150px; width: 70px;"></div>
+    </div>
+  </div>
+
+  <!-- THE EXECUTIVE DESK -->
+  <div class="executive-desk">
+    <div class="desk-lamp-glow"></div>
+
+    <!-- Desk Header -->
+    <div class="desk-header">
+      <div class="brand-title">
+        <span>HEXNEMESIS COMMAND</span>
+        <span class="brand-badge">EXECUTIVE COCKPIT</span>
+      </div>
+      <div class="desk-nav">
+        <a href="/" title="Open Full Technical Operations Console">⚙️ Operations Console</a>
+        <button onclick="refreshExecutiveBrief()">🔄 Refresh Dossier</button>
+      </div>
+    </div>
+
+    <!-- The Leather Desk Blotter & Dossier Folder -->
+    <div class="blotter-mat">
+      
+      <div class="dossier-header">
+        <div>
+          <div class="dossier-title">DAILY STRATEGIC INTELLIGENCE BRIEF</div>
+          <div class="dossier-sub" id="dossierTimestamp">SYNCHRONIZING SECURE RECON TELEMETRY...</div>
+        </div>
+        <div class="security-stamp" id="securityStatus">● 100% STEALTH VIGILANCE ACTIVE</div>
+      </div>
+
+      <!-- NEED TO KNOW NUMBERS GRID -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Today's Builder Friends</div>
+          <div class="kpi-value" id="kpiTodayFriends">--</div>
+          <div class="kpi-delta">⚡ Max Velocity Pacing</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Today's Engagements</div>
+          <div class="kpi-value" id="kpiTodayEngagements">--</div>
+          <div class="kpi-delta">🎯 Likes & AI Comments</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Blueprint Drops Today</div>
+          <div class="kpi-value" id="kpiTodayPosts">--</div>
+          <div class="kpi-delta">📐 IRC CAD Layouts</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Whale Contractor Leads</div>
+          <div class="kpi-value" id="kpiWhales">--</div>
+          <div class="kpi-delta" style="color: var(--gold-bright);">👑 High-Intent Builders</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Connected Partners</div>
+          <div class="kpi-value" id="kpiConnected">--</div>
+          <div class="kpi-delta">🤝 In Direct Orbit</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Predator Intel Vault</div>
+          <div class="kpi-value" id="kpiPredatorContacts">--</div>
+          <div class="kpi-delta" style="color: var(--accent-cyan);">📞 Scraped Phones & Emails</div>
+        </div>
+      </div>
+
+      <!-- EXECUTIVE TACTICAL STRIKE BAR -->
+      <div class="strike-bar">
+        <button class="btn-strike" onclick="triggerStrike('predator')">
+          <span>🦅</span>
+          <span>Deploy Predator Scraper (Harvest Phones/Emails)</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('crosspost')">
+          <span>⚡</span>
+          <span>Unified Business Suite Drop (Page + Instagram)</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('warm_dm')">
+          <span>🎯</span>
+          <span>Launch Whale Warm DM Strike</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('reel')">
+          <span>🎬</span>
+          <span>Render 9:16 Video Reel Asset</span>
+        </button>
+      </div>
+
+      <!-- HISTORICAL DAY-BY-DAY STARTING BASELINE LEDGER -->
+      <div class="ledger-section">
+        <div class="ledger-title">
+          <span>HISTORICAL DAILY INFILTRATION RECORD (WHERE EACH DAY BEGAN)</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono';">AUTOMATIC NIGHTLY RECON LEDGER</span>
+        </div>
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Friends Added</th>
+              <th>Engagements (Likes/Comments)</th>
+              <th>Blueprint Posts</th>
+              <th>Profiles Followed</th>
+              <th>Net Operations</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerTableBody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px;">Decryption in progress...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STATUS TOAST -->
+  <div id="statusToast">
+    <span id="toastIcon">⚡</span>
+    <span id="toastMsg">Command dispatched successfully.</span>
+  </div>
+
+  <script>
+    async function refreshExecutiveBrief() {
+      try {
+        const res = await fetch('/api/executive/brief');
+        const data = await res.json();
+        
+        document.getElementById('dossierTimestamp').innerText = 
+          `LAST SECURE SYNC: ${new Date().toLocaleTimeString()} | SYSTEM: ${data.executiveSummary.headline.toUpperCase()}`;
+        
+        // Populate KPIs
+        document.getElementById('kpiTodayFriends').innerText = data.today.friendsAdded || '0';
+        document.getElementById('kpiTodayEngagements').innerText = data.today.engagements || '0';
+        document.getElementById('kpiTodayPosts').innerText = data.today.postsPublished || '0';
+        document.getElementById('kpiWhales').innerText = data.crmIntel.whales || '0';
+        document.getElementById('kpiConnected').innerText = data.crmIntel.connectedPartners || '0';
+        document.getElementById('kpiPredatorContacts').innerText = 
+          `${data.crmIntel.predatorPhoneContacts || 0} 📞 | ${data.crmIntel.predatorEmailContacts || 0} ✉️`;
+
+        // Render Ledger
+        const tbody = document.getElementById('ledgerTableBody');
+        const todayStr = new Date().toISOString().slice(0, 10);
+        
+        if (data.dailyLedger && data.dailyLedger.length > 0) {
+          tbody.innerHTML = data.dailyLedger.map(row => {
+            const isToday = row.date === todayStr;
+            return `
+              <tr>
+                <td><strong>${row.date}</strong>${isToday ? '<span class="badge-today">ACTIVE DAY</span>' : ''}</td>
+                <td>+${row.friendsAdded}</td>
+                <td>+${row.likesGiven + row.commentsPosted} (${row.likesGiven} likes, ${row.commentsPosted} comments)</td>
+                <td>+${row.postsPublished} blueprints</td>
+                <td>+${row.profilesFollowed}</td>
+                <td style="color: var(--gold-bright); font-weight: 700;">${row.totalActions}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Failed to refresh executive brief:', err);
+      }
+    }
+
+    async function triggerStrike(type) {
+      showToast('⚡', `Dispatching ${type.toUpperCase()} strike to autonomous queue...`);
+      try {
+        const res = await fetch(`/api/executive/strike/${type}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✓', data.message || 'Strike executed successfully.');
+          setTimeout(refreshExecutiveBrief, 2000);
+        } else {
+          showToast('⚠️', data.error || 'Strike returned an error.');
+        }
+      } catch (err) {
+        showToast('❌', `Failed: ${err.message}`);
+      }
+    }
+
+    function showToast(icon, msg) {
+      const toast = document.getElementById('statusToast');
+      document.getElementById('toastIcon').innerText = icon;
+      document.getElementById('toastMsg').innerText = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.style.display = 'none'; }, 4500);
+    }
+
+    // Auto-refresh every 25 seconds
+    refreshExecutiveBrief();
+    setInterval(refreshExecutiveBrief, 25000);
+  </script>
+</body>
+</html>

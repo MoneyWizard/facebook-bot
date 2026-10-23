@@ -25,6 +25,7 @@ const resultsRoute  = require('./routes/results');
 const followersRoute = require('./routes/followers');
 const actionsRoute  = require('./routes/actions');
 const queueRoute    = require('./routes/queue');
+const executiveRoute = require('./routes/executive');
 const { startWorker } = require('../engine/worker');
 
 const path = require('path');
@@ -55,6 +56,12 @@ app.get('/', (_req, res) => {
   res.sendFile(path.resolve('./public/index.html'));
 });
 
+// ─── Executive Suite Dashboard Route ─────────────────────────────────────────
+app.get('/executive', (_req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.resolve('./public/executive.html'));
+});
+
 // ─── Request Logging Middleware ───────────────────────────────────────────────
 app.use((req, _res, next) => {
   logger.debug(`${req.method} ${req.path}`);
@@ -79,6 +86,7 @@ app.use('/api/analyze',        analyzeRoute);
 app.use('/api/actions',        actionsRoute);
 app.use('/api/results',        resultsRoute);
 app.use('/api/queue',          queueRoute);
+app.use('/api/executive',      executiveRoute);
 
 // ─── Lead CRM Routes ─────────────────────────────────────────────────────────
 const { getLeads, CSV_FILE } = require('../crm/leadExporter');
