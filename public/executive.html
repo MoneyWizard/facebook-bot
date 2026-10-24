@@ -461,25 +461,39 @@
           <div class="kpi-value" id="kpiPredatorContacts">--</div>
           <div class="kpi-delta" style="color: var(--accent-cyan);">📞 Scraped Phones & Emails</div>
         </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Live Site Traffic (HexNemesis)</div>
+          <div class="kpi-value" id="kpiPageviews">--</div>
+          <div class="kpi-delta" style="color: var(--accent-emerald);">📈 Live Builder Clicks</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Calculators Executed</div>
+          <div class="kpi-value" id="kpiToolRuns">--</div>
+          <div class="kpi-delta" style="color: var(--gold-bright);">🪚 Rafter, Stair & Cabinet Runs</div>
+        </div>
       </div>
 
       <!-- EXECUTIVE TACTICAL STRIKE BAR -->
       <div class="strike-bar">
-        <button class="btn-strike" onclick="triggerStrike('predator')">
-          <span>🦅</span>
-          <span>Deploy Predator Scraper (Harvest Phones/Emails)</span>
+        <button class="btn-strike" onclick="triggerStrike('google_predator')">
+          <span>🗺️</span>
+          <span>Google Maps Builder Predator Sweep (Mobiles/Emails)</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('triple_touch')">
+          <span>📱</span>
+          <span>Triple-Touch Outbound Cadence (SMS+Email+Social)</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('group_authority')">
+          <span>📐</span>
+          <span>Group Authority Math Hijacker (Auto-Solve & Cite)</span>
+        </button>
+        <button class="btn-strike" onclick="triggerStrike('syndicate')">
+          <span>🎵</span>
+          <span>3-Way Short Syndication (TikTok + IG/FB Reels)</span>
         </button>
         <button class="btn-strike" onclick="triggerStrike('crosspost')">
           <span>⚡</span>
           <span>Unified Business Suite Drop (Page + Instagram)</span>
-        </button>
-        <button class="btn-strike" onclick="triggerStrike('warm_dm')">
-          <span>🎯</span>
-          <span>Launch Whale Warm DM Strike</span>
-        </button>
-        <button class="btn-strike" onclick="triggerStrike('reel')">
-          <span>🎬</span>
-          <span>Render 9:16 Video Reel Asset</span>
         </button>
       </div>
 
@@ -532,6 +546,11 @@
         document.getElementById('kpiConnected').innerText = data.crmIntel.connectedPartners || '0';
         document.getElementById('kpiPredatorContacts').innerText = 
           `${data.crmIntel.predatorPhoneContacts || 0} 📞 | ${data.crmIntel.predatorEmailContacts || 0} ✉️`;
+        
+        const totalRuns = data.traffic?.calculatorRuns ? 
+          Object.values(data.traffic.calculatorRuns).reduce((a, b) => a + b, 0) : 0;
+        document.getElementById('kpiPageviews').innerText = data.traffic?.totalPageviews || '0';
+        document.getElementById('kpiToolRuns').innerText = `${totalRuns} Runs`;
 
         // Render Ledger
         const tbody = document.getElementById('ledgerTableBody');

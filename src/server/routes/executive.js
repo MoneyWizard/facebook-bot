@@ -7,6 +7,10 @@ const { getQueueStats, addTask } = require('../../engine/queueManager');
 const { getLeads } = require('../../crm/leadExporter');
 const { getPredatorLeads, scrapeMarketplacePredator } = require('../../scrapers/marketplacePredator');
 const { generateReelAsset } = require('../../actions/videoGenerator');
+const { getTrafficTelemetry } = require('../../analytics/trafficRadar');
+const { scrapeGooglePredator } = require('../../scrapers/googlePredator');
+const { processTripleTouchStrike } = require('../../actions/tripleTouch');
+const { hijackGroupAuthority } = require('../../actions/groupAuthority');
 const { getTodayCounts } = require('../../utils/sessionBehavior');
 const { config } = require('../../config');
 const logger = require('../../utils/logger');
@@ -80,9 +84,55 @@ router.get('/brief', (_req, res) => {
       predatorPhoneContacts: phonesHarvested,
       predatorEmailContacts: emailsHarvested,
     },
+    traffic: getTrafficTelemetry(),
     queue: queueStats,
     dailyLedger: dailyLedger.slice(0, 7), // Last 7 days
   });
+});
+
+/**
+ * POST /api/executive/strike/google_predator
+ * Trigger Google Maps builder predator sweep for mobile numbers and emails.
+ */
+router.post('/strike/google_predator', (req, res) => {
+  const task = addTask({
+    action: 'google_predator',
+    target: 'google_maps_sweep',
+    payload: {
+      trade: req.body.trade || 'custom home builder',
+      metro: req.body.metro || 'Austin, TX',
+      maxResults: req.body.maxResults || 10,
+    },
+    priority: 5,
+  });
+  res.json({ success: true, message: 'Google Maps Builder Predator sweep queued', taskId: task.id });
+});
+
+/**
+ * POST /api/executive/strike/triple_touch
+ * Launch multi-channel Triple-Touch cadence (social + technical email + mobile SMS).
+ */
+router.post('/strike/triple_touch', async (req, res) => {
+  try {
+    const result = await processTripleTouchStrike({ limit: req.body.limit || 5 });
+    res.json({ success: true, message: `Triple-Touch cadence launched for ${result.totalDispatched} Whales`, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/executive/strike/group_authority
+ * Scan builder groups, calculate carpentry layout math, and post authoritative solution.
+ */
+router.post('/strike/group_authority', (req, res) => {
+  const task = addTask({
+    action: 'group_authority',
+    target: req.body.groupUrl || 'builder_communities',
+    payload: { groupUrl: req.body.groupUrl },
+    priority: 5,
+  });
+  res.json({ success: true, message: 'Group Authority Math Infiltration queued', taskId: task.id });
 });
 
 /**
@@ -117,6 +167,23 @@ router.post('/strike/reel', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+/**
+ * POST /api/executive/strike/syndicate
+ * Launch 3-way short-form syndication (TikTok + Instagram Reels + Facebook Reels).
+ */
+router.post('/strike/syndicate', (req, res) => {
+  const task = addTask({
+    action: 'syndicate_short',
+    target: 'omni_short_production',
+    payload: {
+      type: req.body.type,
+      caption: req.body.caption,
+    },
+    priority: 5,
+  });
+  res.json({ success: true, message: '3-Way Short Syndication queued (TikTok + IG Reels + FB Reels)', taskId: task.id });
 });
 
 /**

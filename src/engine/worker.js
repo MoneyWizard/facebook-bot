@@ -17,6 +17,9 @@ const { scrubAndScoreLeads } = require('../crm/leadScrubber');
 const { generateVisualDiagram } = require('../actions/visualGenerator');
 const { generateReelAsset } = require('../actions/videoGenerator');
 const { scrapeMarketplacePredator } = require('../scrapers/marketplacePredator');
+const { scrapeGooglePredator } = require('../scrapers/googlePredator');
+const { publishTikTokShort, syndicateShortForm } = require('../actions/tiktok');
+const { hijackGroupAuthority } = require('../actions/groupAuthority');
 const { sendNotification } = require('../utils/notifications');
 const { scrapeProfile } = require('../scrapers/profile');
 const { getFollowers } = require('../scrapers/followers');
@@ -92,8 +95,17 @@ async function executeTask(task) {
       return { success: true, reelPath };
     }
 
+    case 'tiktok_post':
+      return await publishTikTokShort(payload);
+
+    case 'syndicate_short':
+      return await syndicateShortForm(payload);
+
     case 'marketplace_predator':
       return await scrapeMarketplacePredator(payload);
+
+    case 'google_predator':
+      return await scrapeGooglePredator(payload);
 
     case 'business_suite_post':
       return await createBusinessSuitePost(payload);
@@ -109,6 +121,9 @@ async function executeTask(task) {
 
     case 'engage_group':
       return await engageGroup(target);
+
+    case 'group_authority':
+      return await hijackGroupAuthority(payload);
 
     case 'create_page':
       return await createPage(payload);

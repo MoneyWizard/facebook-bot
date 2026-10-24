@@ -191,13 +191,13 @@ async function runAutoPilotCycle() {
     lastPredatorTime = now;
   }
 
-  // 9. Auto-Schedule 9:16 Vertical Reel Asset Rendering (Every 8 hours)
+  // 9. Auto-Schedule 3-Way Short-Form Syndication (TikTok + IG Reels + FB Reels every 8 hours)
   if (now - lastReelTime > REEL_INTERVAL_MS) {
-    logger.info('[AutoPilot] Auto-queuing 9:16 vertical Reel blueprint generation');
+    logger.info('[AutoPilot] Auto-queuing 3-way short-form syndication (TikTok + IG Reels + FB Reels)');
     addTask({
-      action: 'generate_reel',
-      target: 'reels_production',
-      priority: 2,
+      action: 'syndicate_short',
+      target: 'omni_short_production',
+      priority: 3,
     });
     lastReelTime = now;
   }
