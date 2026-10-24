@@ -8,6 +8,7 @@ const { getLeads } = require('../../crm/leadExporter');
 const { getPredatorLeads, scrapeMarketplacePredator } = require('../../scrapers/marketplacePredator');
 const { generateReelAsset } = require('../../actions/videoGenerator');
 const { getTrafficTelemetry } = require('../../analytics/trafficRadar');
+const { getAudienceTelemetry, syncAudienceLive } = require('../../analytics/audienceRadar');
 const { scrapeGooglePredator } = require('../../scrapers/googlePredator');
 const { processTripleTouchStrike } = require('../../actions/tripleTouch');
 const { hijackGroupAuthority } = require('../../actions/groupAuthority');
@@ -85,8 +86,35 @@ router.get('/brief', (_req, res) => {
       predatorEmailContacts: emailsHarvested,
     },
     traffic: getTrafficTelemetry(),
+    audience: getAudienceTelemetry(),
     queue: queueStats,
     dailyLedger: dailyLedger.slice(0, 7), // Last 7 days
+  });
+});
+
+/**
+ * GET /api/executive/audience
+ * Returns live audience metrics across Personal FB, Page FB, and Instagram.
+ */
+router.get('/audience', (_req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    audience: getAudienceTelemetry(),
+  });
+});
+
+/**
+ * POST /api/executive/audience/sync
+ * Trigger background live scrape sweep across Personal, Page, and Instagram profiles.
+ */
+router.post('/audience/sync', async (_req, res) => {
+  // Trigger asynchronously without blocking the client response
+  syncAudienceLive().catch((err) => logger.error(`[AudienceRadar] Background sync error: ${err.message}`));
+  res.json({
+    status: 'sync_initiated',
+    message: 'Audience sweep initiated across Facebook Personal, Page, and Instagram.',
+    current: getAudienceTelemetry(),
   });
 });
 

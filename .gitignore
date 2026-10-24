@@ -2,7 +2,7 @@ node_modules/
 .env
 cookies/session.json
 cookies/ig_session.json
-logs/*.log
+logs/
 data/*.json
 data/*.db
 data/generated_visuals/

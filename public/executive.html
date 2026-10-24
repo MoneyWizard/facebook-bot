@@ -386,6 +386,213 @@
       align-items: center;
       gap: 10px;
     }
+
+    /* ─── AUDIENCE GROWTH & INFILTRATION METER CONSOLE ─── */
+    .audience-meter-console {
+      background: radial-gradient(ellipse at 50% 0%, rgba(26, 36, 56, 0.6) 0%, rgba(8, 12, 20, 0.95) 100%);
+      border: 2px solid rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.9),
+        inset 0 1px 1px rgba(255, 215, 0, 0.3),
+        0 0 25px rgba(212, 175, 55, 0.1);
+      padding: 26px 30px;
+      margin-bottom: 35px;
+      position: relative;
+      overflow: hidden;
+    }
+    .audience-meter-console::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--gold-bright), var(--gold), transparent);
+    }
+    .meter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 14px;
+    }
+    .meter-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 1.5px;
+      color: var(--gold-bright);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .meter-pulse-beacon {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 12px var(--accent-emerald);
+      animation: meterPulse 2s infinite ease-in-out;
+    }
+    @keyframes meterPulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 20px var(--accent-emerald); }
+    }
+    .meter-sync-btn {
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: var(--gold);
+      padding: 7px 15px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .meter-sync-btn:hover {
+      background: var(--gold);
+      color: #07090e;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    /* Dual cockpit: Gauge Arc on left, Cards on right */
+    .meter-body {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 30px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .meter-body { grid-template-columns: 1fr; }
+    }
+    
+    /* Speedometer Arc Dial */
+    .gauge-dial-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .gauge-svg {
+      width: 220px;
+      height: 120px;
+      overflow: visible;
+    }
+    .gauge-bg-arc {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 14;
+      stroke-linecap: round;
+    }
+    .gauge-progress-arc {
+      fill: none;
+      stroke: url(#gaugeGoldGrad);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 251.32;
+      stroke-dashoffset: 251.32;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gauge-center-readout {
+      position: absolute;
+      top: 48px;
+      text-align: center;
+    }
+    .gauge-big-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+    .gauge-sub-caption {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .gauge-target-badge {
+      margin-top: 10px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid var(--accent-emerald);
+      color: var(--accent-emerald);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Audience Sub Cards Grid */
+    .meter-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .meter-sub-card {
+      background: rgba(12, 17, 28, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 8px;
+      padding: 16px 18px;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+    .meter-sub-card:hover {
+      border-color: var(--gold-bright);
+      background: rgba(18, 25, 40, 0.85);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(212, 175, 55, 0.15);
+    }
+    .meter-sub-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .meter-sub-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .meter-sub-detail {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.4;
+    }
+    .meter-sub-badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .badge-growth {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .badge-orbit {
+      background: rgba(0, 242, 254, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -497,6 +704,112 @@
         </button>
       </div>
 
+      <!-- ─── AUDIENCE GROWTH & INFILTRATION TELEMETRY METER ─── -->
+      <div class="audience-meter-console">
+        <div class="meter-header">
+          <div class="meter-title">
+            <span class="meter-pulse-beacon"></span>
+            <span>AUDIENCE INFILTRATION & NETWORK TELEMETRY METER</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="meterLastSync" style="font-size: 11px; font-family: 'JetBrains Mono'; color: var(--text-muted);">STEADY SYNC ACTIVE</span>
+            <button class="meter-sync-btn" onclick="forceSyncAudience()">
+              <span id="meterSyncIcon">🔄</span>
+              <span>LIVE PROBE</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="meter-body">
+          <!-- Left: Speedometer Radial Gauge -->
+          <div class="gauge-dial-container">
+            <svg class="gauge-svg" viewBox="0 0 200 110">
+              <defs>
+                <linearGradient id="gaugeGoldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#c5a059" />
+                  <stop offset="50%" stop-color="#ffd700" />
+                  <stop offset="100%" stop-color="#00f2fe" />
+                </linearGradient>
+              </defs>
+              <!-- Background semi-circle arc (radius 80, center 100, 95) -->
+              <path class="gauge-bg-arc" d="M 20 95 A 80 80 0 0 1 180 95" />
+              <!-- Progress semi-circle arc -->
+              <path id="gaugeProgressArc" class="gauge-progress-arc" d="M 20 95 A 80 80 0 0 1 180 95" />
+            </svg>
+            <div class="gauge-center-readout">
+              <div class="gauge-big-num" id="gaugeTotalReach">621</div>
+              <div class="gauge-sub-caption">TOTAL ECOSYSTEM REACH</div>
+            </div>
+            <div class="gauge-target-badge" id="gaugeMilestoneBadge">
+              TARGET: 1,000 BUILDERS (62.1%)
+            </div>
+          </div>
+
+          <!-- Right: 4 Telemetry Breakdown Cards -->
+          <div class="meter-cards-grid">
+            <div class="meter-sub-card">
+              <div class="meter-sub-title">
+                <span>👤</span>
+                <span>Personal Profile</span>
+              </div>
+              <div class="meter-sub-val" id="meterPersonalFollowers">567</div>
+              <div class="meter-sub-detail">
+                Followers (Professional Mode)<br>
+                <span id="meterPersonalFriends" style="color: var(--gold-bright);">~50 Direct Friends</span> • 109 Following
+              </div>
+              <div class="meter-sub-badge badge-growth" id="meterPersonalGrowth">
+                📈 +120 Follows (+11,900%)
+              </div>
+            </div>
+
+            <div class="meter-sub-card">
+              <div class="meter-sub-title">
+                <span>🏢</span>
+                <span>HexNemesis Page</span>
+              </div>
+              <div class="meter-sub-val" id="meterPageFollowers">48</div>
+              <div class="meter-sub-detail">
+                Followers & Page Likes<br>
+                Brand Command Authority
+              </div>
+              <div class="meter-sub-badge badge-orbit">
+                ⚡ Scheduled Invites Active
+              </div>
+            </div>
+
+            <div class="meter-sub-card">
+              <div class="meter-sub-title">
+                <span>📸</span>
+                <span>Instagram Reels</span>
+              </div>
+              <div class="meter-sub-val" id="meterIgFollowers">6</div>
+              <div class="meter-sub-detail">
+                63 Following • Reels Seeded<br>
+                @hexnemesisproductions
+              </div>
+              <div class="meter-sub-badge badge-growth">
+                🎯 Story Sniping Engaged
+              </div>
+            </div>
+
+            <div class="meter-sub-card">
+              <div class="meter-sub-title">
+                <span>🌐</span>
+                <span>Builder Network</span>
+              </div>
+              <div class="meter-sub-val" id="meterTotalAudience">621</div>
+              <div class="meter-sub-detail">
+                Unified Cross-Platform Orbit<br>
+                Next Milestone: 1,000 Reach
+              </div>
+              <div class="meter-sub-badge badge-growth" id="meterProgressPct">
+                🔥 62.1% Infiltrated
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- HISTORICAL DAY-BY-DAY STARTING BASELINE LEDGER -->
       <div class="ledger-section">
         <div class="ledger-title">
@@ -604,9 +917,107 @@
       setTimeout(() => { toast.style.display = 'none'; }, 4500);
     }
 
-    // Auto-refresh every 25 seconds
+    /* ─── AUDIENCE METER LOGIC & STEADY UPDATER ─── */
+    let currentAudienceCache = null;
+
+    function updateGaugeArc(percent) {
+      const arc = document.getElementById('gaugeProgressArc');
+      if (!arc) return;
+      const totalLen = 251.32; // circumference of pi * 80
+      const clamped = Math.min(Math.max(percent, 0), 100);
+      const offset = totalLen - (totalLen * (clamped / 100));
+      arc.style.strokeDashoffset = offset;
+    }
+
+    function animateNumber(elementId, startVal, endVal, duration = 800) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      if (isNaN(startVal) || isNaN(endVal) || startVal === endVal) {
+        el.innerText = endVal;
+        return;
+      }
+      const startTime = performance.now();
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(startVal + (endVal - startVal) * progress);
+        el.innerText = current.toLocaleString();
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          el.innerText = endVal.toLocaleString();
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    async function refreshAudienceMeter() {
+      try {
+        const res = await fetch('/api/executive/audience');
+        const json = await res.json();
+        const aud = json.audience || json;
+        if (!aud) return;
+
+        const prevTotal = currentAudienceCache ? currentAudienceCache.totalReach : 0;
+        const newTotal = aud.totalReach || 621;
+        animateNumber('gaugeTotalReach', prevTotal, newTotal);
+        animateNumber('meterTotalAudience', prevTotal, newTotal);
+
+        const prevPersonal = currentAudienceCache?.personal?.followers || 0;
+        animateNumber('meterPersonalFollowers', prevPersonal, aud.personal?.followers || 567);
+
+        const prevPage = currentAudienceCache?.page?.followers || 0;
+        animateNumber('meterPageFollowers', prevPage, aud.page?.followers || 48);
+
+        const prevIg = currentAudienceCache?.instagram?.followers || 0;
+        animateNumber('meterIgFollowers', prevIg, aud.instagram?.followers || 6);
+
+        if (aud.personal?.directFriends) {
+          document.getElementById('meterPersonalFriends').innerText = `~${aud.personal.directFriends} Direct Friends`;
+        }
+
+        const pct = aud.milestoneProgress || parseFloat(((newTotal / 1000) * 100).toFixed(1));
+        updateGaugeArc(pct);
+
+        document.getElementById('gaugeMilestoneBadge').innerText = 
+          `TARGET: ${aud.milestoneTarget || 1000} BUILDERS (${pct}%)`;
+        document.getElementById('meterProgressPct').innerText = `🔥 ${pct}% Infiltrated`;
+
+        if (aud.lastUpdated) {
+          const d = new Date(aud.lastUpdated);
+          document.getElementById('meterLastSync').innerText = `LAST SYNC: ${d.toLocaleTimeString()}`;
+        }
+
+        currentAudienceCache = aud;
+      } catch (err) {
+        console.warn('Audience meter refresh error:', err);
+      }
+    }
+
+    async function forceSyncAudience() {
+      const btn = document.getElementById('meterSyncIcon');
+      if (btn) btn.style.animation = 'spin 1s infinite linear';
+      showToast('🔄', 'Dispatching live audience scan across Facebook & Instagram...');
+      try {
+        const res = await fetch('/api/executive/audience/sync', { method: 'POST' });
+        const json = await res.json();
+        showToast('✓', 'Live probe started in background. Telemetry updating...');
+        setTimeout(refreshAudienceMeter, 4000);
+        setTimeout(refreshAudienceMeter, 12000);
+      } catch (err) {
+        showToast('❌', `Sync failed: ${err.message}`);
+      } finally {
+        setTimeout(() => {
+          if (btn) btn.style.animation = '';
+        }, 3000);
+      }
+    }
+
+    // Auto-refresh loops: Executive Dossier every 25s, Audience Meter steadily every 15s
     refreshExecutiveBrief();
+    refreshAudienceMeter();
     setInterval(refreshExecutiveBrief, 25000);
+    setInterval(refreshAudienceMeter, 15000);
   </script>
 </body>
 </html>
