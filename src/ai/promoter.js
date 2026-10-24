@@ -77,19 +77,15 @@ async function generatePostContent(opts = {}) {
 }
 
 /**
- * Generate a contextual comment in response to a post, incorporating site knowledge.
+ * Generate an authentic, contextual peer-to-peer craftsman comment on a builder's post.
+ * STRICT OPERATIONAL SECURITY RULE: Never drop links or domain names in 3rd-party comments.
+ * The profile name and avatar serve as the brand touchpoint; comments build rapport and authority.
  *
  * @param {string} postText - Text of the post being commented on
- * @param {string} [link="https://hexnemesis.com"] - Target URL
- * @returns {Promise<string>} Generated comment text
+ * @returns {Promise<string>} Clean organic comment text
  */
-async function generateComment(postText, link = 'https://hexnemesis.com') {
-  logger.info(`Generating comment for post snippet: "${postText.slice(0, 60)}..."`);
-
-  const knowledge = await getSiteKnowledge(link);
-  const siteContext = knowledge
-    ? `Site Headings/Tools: ${knowledge.headings.slice(0, 5).join(', ')}`
-    : 'HexNemesis AI & Technology Tools';
+async function generateComment(postText) {
+  logger.info(`Generating organic craftsman comment for post: "${postText.slice(0, 60)}..."`);
 
   const openai = getClient();
   const completion = await openai.chat.completions.create({
@@ -97,18 +93,23 @@ async function generateComment(postText, link = 'https://hexnemesis.com') {
     messages: [
       {
         role: 'system',
-        content: `You are a knowledgeable social media user leaving helpful, relevant comments on Facebook posts.\nSite Context: ${siteContext}`,
+        content: `You are an experienced, respected Master Builder and Finish Carpenter commenting on fellow contractors' Facebook posts.
+CRITICAL RULES:
+1. DO NOT include any links, URLs, websites, or domain names (e.g., do NOT mention hexnemesis or any .com).
+2. DO NOT sound like an ad, bot, or corporate representative.
+3. Speak peer-to-peer: genuine, professional, knowledgeable trade feedback. Compliment clean framing lines, tight miter joints, plumb cuts, or ask an intelligent question about the build/lumber.
+4. Keep it concise (1-2 punchy sentences maximum).`,
       },
       {
         role: 'user',
-        content: `Read this post text: "${postText.slice(0, 400)}"\n\nWrite a 1-2 sentence insightful response that relevantly references ${link} or tools available there as a useful resource. Make it sound completely natural and conversational.`,
+        content: `Contractor's Post: "${postText.slice(0, 400)}"\n\nLeave a genuine craftsman comment respecting their work. Zero sales talk, zero links.`,
       },
     ],
-    temperature: 0.6,
-    max_tokens: 200,
+    temperature: 0.7,
+    max_tokens: 150,
   });
 
-  const comment = completion.choices[0]?.message?.content?.trim() || '';
+  const comment = completion.choices[0]?.message?.content?.trim() || 'Clean craftsmanship and solid layout work here. Respect.';
   return comment;
 }
 
