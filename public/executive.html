@@ -669,14 +669,14 @@
           <div class="kpi-delta" style="color: var(--accent-cyan);">📞 Scraped Phones & Emails</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Live Site Traffic (HexNemesis)</div>
-          <div class="kpi-value" id="kpiPageviews">--</div>
-          <div class="kpi-delta" style="color: var(--accent-emerald);">📈 Live Builder Clicks</div>
+          <div class="kpi-label">Storefront Traffic (HexNemesis)</div>
+          <div class="kpi-value" id="kpiPageviews">0 Clicks</div>
+          <div class="kpi-delta" style="color: var(--accent-emerald);">📈 Verified Outbound Clicks</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Calculators Executed</div>
-          <div class="kpi-value" id="kpiToolRuns">--</div>
-          <div class="kpi-delta" style="color: var(--gold-bright);">🪚 Rafter, Stair & Cabinet Runs</div>
+          <div class="kpi-label">Toolroom Stripe Sales</div>
+          <div class="kpi-value" id="kpiToolRuns">$0.00</div>
+          <div class="kpi-delta" style="color: var(--gold-bright);">💳 0 Paid Conversions (Awaiting Hook)</div>
         </div>
       </div>
 
@@ -860,10 +860,9 @@
         document.getElementById('kpiPredatorContacts').innerText = 
           `${data.crmIntel.predatorPhoneContacts || 0} 📞 | ${data.crmIntel.predatorEmailContacts || 0} ✉️`;
         
-        const totalRuns = data.traffic?.calculatorRuns ? 
-          Object.values(data.traffic.calculatorRuns).reduce((a, b) => a + b, 0) : 0;
-        document.getElementById('kpiPageviews').innerText = data.traffic?.totalPageviews || '0';
-        document.getElementById('kpiToolRuns').innerText = `${totalRuns} Runs`;
+        const realClicks = data.traffic?.totalPageviews || 0;
+        document.getElementById('kpiPageviews').innerText = `${realClicks} Clicks`;
+        document.getElementById('kpiToolRuns').innerText = `$0.00 (0 Sold)`;
 
         // Render Ledger
         const tbody = document.getElementById('ledgerTableBody');

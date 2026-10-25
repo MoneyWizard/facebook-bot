@@ -9,21 +9,21 @@ function initTelemetry() {
   if (!fs.existsSync(TELEMETRY_FILE)) {
     fs.mkdirSync(path.dirname(TELEMETRY_FILE), { recursive: true });
     const initialData = {
-      totalPageviews: 148,
-      uniqueVisitors: 89,
+      totalPageviews: 0,
+      uniqueVisitors: 0,
       calculatorRuns: {
-        rafterPitch: 42,
-        stairStringer: 38,
-        cabinetOverlay: 29,
-        lumberOptimizer: 19,
+        rafterPitch: 0,
+        stairStringer: 0,
+        cabinetOverlay: 0,
+        lumberOptimizer: 0,
       },
       channelAttribution: {
-        metaBusinessSuite: 45,
-        facebookPersonal: 34,
-        warmDMs: 18,
-        instagramStories: 22,
-        marketplacePredator: 14,
-        direct: 15,
+        metaBusinessSuite: 0,
+        facebookPersonal: 0,
+        warmDMs: 0,
+        instagramStories: 0,
+        marketplacePredator: 0,
+        direct: 0,
       },
       recentEvents: [],
     };
