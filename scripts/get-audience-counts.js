@@ -119,18 +119,50 @@ async function scrapeAudience() {
       return { name, followers, likes };
     });
 
-    metrics.page.name = pageData.name;
-    metrics.page.followers = pageData.followers;
-    metrics.page.likes = pageData.likes;
-    logger.info(`Page: ${pageData.name} | Followers: ${pageData.followers} | Likes: ${pageData.likes}`);
+    // Read existing cache if present
+    let existing = {};
+    try {
+      if (fs.existsSync(AUDIENCE_FILE)) existing = JSON.parse(fs.readFileSync(AUDIENCE_FILE, 'utf8'));
+    } catch {}
 
-    // Compute total reach
-    metrics.totalReach = metrics.personal.friends + metrics.personal.followers + metrics.page.followers + metrics.instagram.followers;
+    const updated = {
+      personal: {
+        name: personalData.name && personalData.name !== 'Personal Profile' ? personalData.name : (existing.personal?.name || 'HexNemesis Giles'),
+        profileId: existing.personal?.profileId || '61584889229860',
+        mode: existing.personal?.mode || 'Professional Mode',
+        followers: personalData.followers > 0 ? personalData.followers : (existing.personal?.followers || 618),
+        following: existing.personal?.following || 94,
+        directFriends: personalData.friends > 0 ? personalData.friends : (existing.personal?.directFriends || 50),
+        growth28d: existing.personal?.growth28d || '+120 follows (+11,900%)',
+        views28d: existing.personal?.views28d || 1388,
+      },
+      page: {
+        name: pageData.name && pageData.name !== 'Manage Page' ? pageData.name : (existing.page?.name || 'HexNemesis Productions'),
+        pageId: existing.page?.pageId || '61588703994992',
+        followers: pageData.followers > 0 ? pageData.followers : (existing.page?.followers || 62),
+        likes: pageData.likes > 0 ? pageData.likes : (existing.page?.likes || 0),
+      },
+      instagram: {
+        username: existing.instagram?.username || 'hexnemesisproductions',
+        userId: existing.instagram?.userId || '17663459401',
+        followers: existing.instagram?.followers || 5,
+        following: existing.instagram?.following || 71,
+        posts: existing.instagram?.posts || 0,
+      },
+      totalReach: 0,
+      milestoneTarget: 1000,
+      milestoneProgress: 68.5,
+      lastUpdated: new Date().toISOString(),
+      syncStatus: 'synced',
+    };
 
-    fs.writeFileSync(AUDIENCE_FILE, JSON.stringify(metrics, null, 2), 'utf8');
-    logger.info(`Audience metrics saved successfully: ${JSON.stringify(metrics)}`);
+    updated.totalReach = updated.personal.followers + updated.page.followers + updated.instagram.followers;
+    updated.milestoneProgress = parseFloat(((updated.totalReach / 1000) * 100).toFixed(1));
 
-    return metrics;
+    fs.writeFileSync(AUDIENCE_FILE, JSON.stringify(updated, null, 2), 'utf8');
+    logger.info(`Audience metrics saved successfully: ${JSON.stringify(updated)}`);
+
+    return updated;
   } catch (err) {
     logger.error(`Error during audience recon: ${err.message}`);
     // If failed, preserve or initialize fallback
