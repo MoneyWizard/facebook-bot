@@ -1,38 +1,19 @@
-name: Autonomous Bot CI & Cloud Engine
+name: Autonomous Bot Cloud Schedule
 
 on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
+  schedule:
+    # Run automatically every 4 hours around the clock on GitHub's cloud servers
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
 
 permissions:
   contents: write
 
 jobs:
-  ci-validation:
-    name: Syntax & Engine Integrity Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Validate JavaScript Syntax Across Engine
-        run: |
-          for f in $(find src -name "*.js"); do
-            echo "Checking $f..."
-            node --check "$f"
-          done
-          echo "All engine modules passed syntax validation."
-
   run-autopilot:
-    name: Cloud Auto-Pilot Cycle (Manual Dispatch)
-    if: github.event_name == 'workflow_dispatch'
+    name: Cloud Auto-Pilot Cycle
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -68,20 +49,11 @@ jobs:
           fi
 
       - name: Execute Autonomous Auto-Pilot Cycle
-        run: |
-          node -e '
-            require("dotenv").config();
-            const { init } = require("./src/utils/storage");
-            init();
-            const { runAutoPilotCycle } = require("./src/engine/autoPilot");
-            runAutoPilotCycle()
-              .then(() => console.log("Cloud Auto-Pilot cycle complete."))
-              .catch(err => { console.error("Cycle error", err); process.exit(1); });
-          '
+        run: node scripts/cloud-cycle.js
 
       - name: Commit Updated Database State Back to Repository
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/contractor-leads.csv || true
+          git add -f data/contractor-leads.csv data/predator-leads.csv || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "auto: update database state after cloud run" && git push)
