@@ -1,7 +1,7 @@
 {
   "name": "facebook-bot",
-  "version": "1.0.0",
-  "description": "Facebook profile scraper bot with Playwright stealth + GPT-4o AI analysis (educational/research use only)",
+  "version": "2.0.0",
+  "description": "HexNemesis Autonomous Multi-Platform Predator Engine & Executive Telemetry Suite",
   "main": "src/server/app.js",
   "scripts": {
     "start": "node src/server/app.js",
