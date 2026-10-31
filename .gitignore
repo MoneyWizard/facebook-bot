@@ -10,6 +10,7 @@ data/generated_reels/
 data/*.csv
 cookies/page_session.json
 cookies/tiktok_session.json
+cookies/youtube_session.json
 .DS_Store
 *.env*
 .env
