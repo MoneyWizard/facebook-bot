@@ -31,8 +31,21 @@ jobs:
       - name: Install Project Dependencies
         run: npm ci
 
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright Browsers & Linux System Dependencies
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium || (sleep 5 && npx playwright install-deps chromium)
+          else
+            npx playwright install --with-deps chromium || (sleep 5 && npx playwright install --with-deps chromium)
+          fi
 
       - name: Inject Environment Secrets & Session Cookies
         env:
