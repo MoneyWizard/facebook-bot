@@ -9,10 +9,14 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   run-autopilot:
     name: Cloud Auto-Pilot Cycle
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout Repository
@@ -21,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Project Dependencies
@@ -34,6 +38,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SESSION_COOKIES_JSON: ${{ secrets.SESSION_COOKIES_JSON }}
+          TIKTOK_COOKIES_JSON: ${{ secrets.TIKTOK_COOKIES_JSON }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
         run: |
           mkdir -p cookies data logs
@@ -44,8 +49,12 @@ jobs:
             echo "PROXY_URL=${PROXY_URL}" >> .env
           fi
           if [ -n "${SESSION_COOKIES_JSON}" ]; then
-            echo "${SESSION_COOKIES_JSON}" > cookies/session.json
-            echo "Session cookies successfully injected into cloud runner."
+            printf '%s' "${SESSION_COOKIES_JSON}" > cookies/session.json
+            echo "Facebook session cookies injected into cloud runner."
+          fi
+          if [ -n "${TIKTOK_COOKIES_JSON}" ]; then
+            printf '%s' "${TIKTOK_COOKIES_JSON}" > cookies/tiktok_session.json
+            echo "TikTok session cookies injected into cloud runner."
           fi
 
       - name: Execute Autonomous Auto-Pilot Cycle
@@ -55,5 +64,9 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -f data/contractor-leads.csv data/predator-leads.csv || true
-          git diff --quiet && git diff --staged --quiet || (git commit -m "auto: update database state after cloud run" && git push)
+          git add -f data/contractor-leads.csv data/predator-leads.csv data/audience-metrics.json || true
+          if ! git diff --staged --quiet; then
+            git commit -m "auto: update database state after cloud run"
+            git pull --rebase origin master || true
+            git push origin master || true
+          fi

@@ -61,7 +61,7 @@ let lastPredatorTime = 0;
 const PREDATOR_INTERVAL_MS = 6 * 60 * 60 * 1000; // Auto-scrape contractor marketplace intel every 6 hours
 
 let lastReelTime = 0;
-const REEL_INTERVAL_MS = 8 * 60 * 60 * 1000; // Auto-generate 9:16 vertical reel blueprints every 8 hours
+const REEL_INTERVAL_MS = 3 * 60 * 60 * 1000; // Auto-deploy TikTok Music Vault clip every 3 hours
 
 /**
  * Auto-Pilot Discovery Engine:
@@ -74,19 +74,22 @@ async function runAutoPilotCycle() {
 
   const now = Date.now();
 
-  // 1. Auto-Schedule Promotional Post if 4 hours have passed (Rotating: Personal vs Meta Business Suite FB+IG)
+  // 1. Auto-Schedule Promotional Post if 4 hours have passed (Rotating: Music Streaming Links vs Builder Software on Personal Profile)
   if (now - lastPostTime > POST_INTERVAL_MS) {
-    const useBusinessSuite = postTargetToggle;
-    postTargetToggle = !postTargetToggle; // alternate for next rotation
+    const useMusicDrop = postTargetToggle;
+    postTargetToggle = !postTargetToggle;
 
-    if (useBusinessSuite) {
-      logger.info('[AutoPilot] Auto-queuing Meta Business Suite unified post (Facebook Page + Instagram)');
+    if (useMusicDrop) {
+      const { MUSIC_CATALOG } = require('../config/musicCatalog');
+      const trackKey = Math.random() < 0.5 ? 'pocket' : 'choir';
+      const track = MUSIC_CATALOG[trackKey];
+      logger.info(`[AutoPilot] Auto-queuing Weldon Giles "${track.title}" streaming links post on Personal Timeline`);
       addTask({
-        action: 'business_suite_post',
-        target: 'https://business.facebook.com/latest/composer',
+        action: 'post',
+        target: PERSONAL_TARGET_URL,
         payload: {
-          promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html',
-          topic: 'digital tools for custom builders, carpenters, and contractors',
+          text: track.facebookPosts[0],
+          asPage: false,
         },
         priority: 4,
       });
@@ -106,30 +109,7 @@ async function runAutoPilotCycle() {
     lastPostTime = now;
   }
 
-  // 2. Auto-Schedule Page Invites (Every 12 hours, invite personal friends to follow HexNemesis Productions Page)
-  if (now - lastInviteTime > INVITE_INTERVAL_MS) {
-    logger.info('[AutoPilot] Auto-queuing scheduled friend invite cycle for HexNemesis Productions Page');
-    addTask({
-      action: 'invite_page',
-      target: PAGE_TARGET_URL,
-      payload: { maxInvites: 30 },
-      priority: 2,
-    });
-    lastInviteTime = now;
-  }
-
-  // 3. Auto-Schedule Linked Instagram Contractor Outreach (Every 2 hours)
-  if (now - lastIgTime > IG_INTERVAL_MS) {
-    const igTag = IG_HASHTAGS[Math.floor(Math.random() * IG_HASHTAGS.length)];
-    logger.info(`[AutoPilot] Auto-queuing Instagram contractor outreach for #${igTag}`);
-    addTask({
-      action: 'ig_engage',
-      target: `https://www.instagram.com/explore/tags/${igTag}/`,
-      payload: { promoLink: config.autoPilot?.promoLink || 'https://hexnemesis.com/home.html' },
-      priority: 2,
-    });
-    lastIgTime = now;
-  }
+  // 2. Page Invites & IG Outreach bypassed (Page removed / IG suspended — preserving Personal account stealth)
 
   // 4. Auto-Schedule Warm DM Outreach to Qualified Leads (Every 3 hours)
   if (now - lastWarmDmTime > WARM_DM_INTERVAL_MS) {
@@ -143,19 +123,6 @@ async function runAutoPilotCycle() {
     lastWarmDmTime = now;
   }
 
-  // 5. Auto-Schedule Instagram Story Sniping (Every 4 hours)
-  if (now - lastStorySnipeTime > STORY_SNIPE_INTERVAL_MS) {
-    const snipeTag = IG_HASHTAGS[Math.floor(Math.random() * IG_HASHTAGS.length)];
-    logger.info(`[AutoPilot] Auto-queuing Instagram Story Sniping for #${snipeTag}`);
-    addTask({
-      action: 'ig_story_snipe',
-      target: snipeTag,
-      payload: { maxStories: 2 },
-      priority: 2,
-    });
-    lastStorySnipeTime = now;
-  }
-
   // 6. Auto-Schedule CRM Scrubbing & Whale Qualification (Every 6 hours)
   if (now - lastScrubTime > SCRUB_INTERVAL_MS) {
     logger.info('[AutoPilot] Auto-queuing CRM Lead Scrub & Whale Scoring');
@@ -165,17 +132,6 @@ async function runAutoPilotCycle() {
       priority: 1,
     });
     lastScrubTime = now;
-  }
-
-  // 7. Auto-Schedule Meta Business Suite Unified Inbox Sweep (Every 6 hours)
-  if (now - lastBusinessInboxTime > BUSINESS_INBOX_INTERVAL_MS) {
-    logger.info('[AutoPilot] Auto-queuing Meta Business Suite Unified Inbox sweep');
-    addTask({
-      action: 'business_suite_inbox',
-      target: 'https://business.facebook.com/latest/inbox/all',
-      priority: 2,
-    });
-    lastBusinessInboxTime = now;
   }
 
   // 8. Auto-Schedule Marketplace Predator Scraping (Every 6 hours)

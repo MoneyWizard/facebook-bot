@@ -7,6 +7,8 @@ data/*.json
 data/*.db
 data/generated_visuals/
 data/generated_reels/
+data/music_videos/
+data/youtube_shorts/
 data/*.csv
 cookies/page_session.json
 cookies/tiktok_session.json

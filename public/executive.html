@@ -737,11 +737,11 @@
               <path id="gaugeProgressArc" class="gauge-progress-arc" d="M 20 95 A 80 80 0 0 1 180 95" />
             </svg>
             <div class="gauge-center-readout">
-              <div class="gauge-big-num" id="gaugeTotalReach">621</div>
-              <div class="gauge-sub-caption">TOTAL ECOSYSTEM REACH</div>
+              <div class="gauge-big-num" id="gaugeTotalReach">825</div>
+              <div class="gauge-sub-caption">SURVIVING ECOSYSTEM REACH</div>
             </div>
             <div class="gauge-target-badge" id="gaugeMilestoneBadge">
-              TARGET: 1,000 BUILDERS (62.1%)
+              TARGET: 1,000 BUILDERS (82.5%)
             </div>
           </div>
 
@@ -750,60 +750,60 @@
             <div class="meter-sub-card">
               <div class="meter-sub-title">
                 <span>👤</span>
-                <span>Personal Profile</span>
+                <span>Personal Profile (ALIVE)</span>
               </div>
-              <div class="meter-sub-val" id="meterPersonalFollowers">567</div>
+              <div class="meter-sub-val" id="meterPersonalFollowers">825</div>
               <div class="meter-sub-detail">
                 Followers (Professional Mode)<br>
-                <span id="meterPersonalFriends" style="color: var(--gold-bright);">~50 Direct Friends</span> • 109 Following
+                <span id="meterPersonalFriends" style="color: var(--gold-bright);">42 Connected Partners</span> • 22 Following
               </div>
               <div class="meter-sub-badge badge-growth" id="meterPersonalGrowth">
-                📈 +120 Follows (+11,900%)
+                📈 +207 Since Oct 29 (+33.5%)
               </div>
             </div>
 
             <div class="meter-sub-card">
               <div class="meter-sub-title">
-                <span>🏢</span>
-                <span>HexNemesis Page</span>
+                <span>🎵</span>
+                <span>TikTok Studio (Musik)</span>
               </div>
-              <div class="meter-sub-val" id="meterPageFollowers">48</div>
+              <div class="meter-sub-val" id="meterTikTokDrops" style="color: var(--accent-cyan);">10 Vault Clips</div>
               <div class="meter-sub-detail">
-                Followers & Page Likes<br>
-                Brand Command Authority
+                Weldon Giles • 1 Drop Every 3h<br>
+                Spotify • Apple • Amazon • DK
               </div>
               <div class="meter-sub-badge badge-orbit">
-                ⚡ Scheduled Invites Active
+                ⏱️ Steady Drip Schedule Active
               </div>
             </div>
 
-            <div class="meter-sub-card">
+            <div class="meter-sub-card" style="border-color: rgba(239, 68, 68, 0.4);">
               <div class="meter-sub-title">
-                <span>📸</span>
-                <span>Instagram Reels</span>
+                <span>🚫</span>
+                <span>FB Page & Instagram</span>
               </div>
-              <div class="meter-sub-val" id="meterIgFollowers">6</div>
+              <div class="meter-sub-val" id="meterPageFollowers" style="color: #ef4444;">OFFLINE</div>
               <div class="meter-sub-detail">
-                63 Following • Reels Seeded<br>
-                @hexnemesisproductions
+                Page Removed • IG Suspended<br>
+                100% Rerouted to Personal FB
               </div>
-              <div class="meter-sub-badge badge-growth">
-                🎯 Story Sniping Engaged
+              <div class="meter-sub-badge" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.4);">
+                🛡️ STEALTH ISOLATED
               </div>
             </div>
 
             <div class="meter-sub-card">
               <div class="meter-sub-title">
                 <span>🌐</span>
-                <span>Builder Network</span>
+                <span>Active Reach</span>
               </div>
-              <div class="meter-sub-val" id="meterTotalAudience">621</div>
+              <div class="meter-sub-val" id="meterTotalAudience">825</div>
               <div class="meter-sub-detail">
-                Unified Cross-Platform Orbit<br>
+                100% Personal Profile Fortress<br>
                 Next Milestone: 1,000 Reach
               </div>
               <div class="meter-sub-badge badge-growth" id="meterProgressPct">
-                🔥 62.1% Infiltrated
+                🔥 82.5% Infiltrated
               </div>
             </div>
           </div>
@@ -958,18 +958,12 @@
         if (!aud) return;
 
         const prevTotal = currentAudienceCache ? currentAudienceCache.totalReach : 0;
-        const newTotal = aud.totalReach || 621;
+        const newTotal = aud.totalReach ?? 825;
         animateNumber('gaugeTotalReach', prevTotal, newTotal);
         animateNumber('meterTotalAudience', prevTotal, newTotal);
 
         const prevPersonal = currentAudienceCache?.personal?.followers || 0;
-        animateNumber('meterPersonalFollowers', prevPersonal, aud.personal?.followers || 567);
-
-        const prevPage = currentAudienceCache?.page?.followers || 0;
-        animateNumber('meterPageFollowers', prevPage, aud.page?.followers || 48);
-
-        const prevIg = currentAudienceCache?.instagram?.followers || 0;
-        animateNumber('meterIgFollowers', prevIg, aud.instagram?.followers || 6);
+        animateNumber('meterPersonalFollowers', prevPersonal, aud.personal?.followers ?? 825);
 
         if (aud.personal?.directFriends) {
           document.getElementById('meterPersonalFriends').innerText = `~${aud.personal.directFriends} Direct Friends`;

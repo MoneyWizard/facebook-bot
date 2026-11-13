@@ -12,31 +12,33 @@ const DEFAULT_METRICS = {
   personal: {
     name: 'HexNemesis Giles',
     profileId: '61584889229860',
-    mode: 'Professional Mode',
-    followers: 567,
-    following: 109,
-    directFriends: 50,
-    growth28d: '+120 follows (+11,900%)',
+    mode: 'Professional Mode (ACTIVE)',
+    followers: 825,
+    following: 22,
+    directFriends: 42,
+    growth28d: '+327 follows (+65.6% surge)',
     views28d: 1388,
   },
   page: {
-    name: 'HexNemesis Productions',
+    name: 'HexNemesis Productions (REMOVED)',
     pageId: '61588703994992',
-    followers: 48,
+    status: 'REMOVED',
+    followers: 0,
     likes: 0,
   },
   instagram: {
-    username: 'hexnemesisproductions',
+    username: 'hexnemesisproductions (SUSPENDED)',
     userId: '17663459401',
-    followers: 6,
-    following: 63,
+    status: 'SUSPENDED',
+    followers: 0,
+    following: 0,
     posts: 0,
   },
-  totalReach: 621,
+  totalReach: 825,
   milestoneTarget: 1000,
-  milestoneProgress: 62.1,
+  milestoneProgress: 82.5,
   lastUpdated: new Date().toISOString(),
-  syncStatus: 'idle',
+  syncStatus: 'synced',
 };
 
 function initAudienceMetrics() {
@@ -103,7 +105,7 @@ async function syncAudienceLive() {
 
     // 1. Personal Profile Recon
     await loadCookies(context, { asPage: false });
-    await page.goto('https://www.facebook.com/me', { waitUntil: 'domcontentloaded', timeout: 35000 });
+    await page.goto('https://www.facebook.com/profile.php?id=61584889229860', { waitUntil: 'domcontentloaded', timeout: 35000 });
     await page.waitForTimeout(3500);
 
     const personalData = await page.evaluate(() => {
@@ -130,69 +132,6 @@ async function syncAudienceLive() {
       return { name, followers, following };
     });
 
-    // 2. Facebook Page Recon
-    await page.goto('https://www.facebook.com/profile.php?id=61588703994992', { waitUntil: 'domcontentloaded', timeout: 35000 });
-    await page.waitForTimeout(3500);
-
-    const pageData = await page.evaluate(() => {
-      const pageText = document.body.innerText;
-      let followers = 0;
-      let likes = 0;
-      const name = document.querySelector('h1')?.innerText?.trim() || 'HexNemesis Productions';
-
-      const followersMatch = pageText.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+followers/i);
-      if (followersMatch) {
-        let raw = followersMatch[1].toUpperCase();
-        if (raw.endsWith('K')) followers = Math.round(parseFloat(raw) * 1000);
-        else followers = parseInt(raw.replace(/,/g, ''), 10);
-      }
-
-      const likesMatch = pageText.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+likes/i);
-      if (likesMatch) {
-        let raw = likesMatch[1].toUpperCase();
-        if (raw.endsWith('K')) likes = Math.round(parseFloat(raw) * 1000);
-        else likes = parseInt(raw.replace(/,/g, ''), 10);
-      }
-
-      return { name, followers, likes };
-    });
-
-    // 3. Instagram Recon
-    let igData = { followers: 6, following: 63, posts: 0 };
-    if (fs.existsSync('./cookies/ig_session.json')) {
-      try {
-        const rawIg = JSON.parse(fs.readFileSync('./cookies/ig_session.json', 'utf8'));
-        await context.addCookies(rawIg);
-        await page.goto('https://www.instagram.com/hexnemesisproductions/', { waitUntil: 'domcontentloaded', timeout: 35000 });
-        await page.waitForTimeout(3000);
-
-        igData = await page.evaluate(() => {
-          const text = document.body.innerText;
-          let followers = 0;
-          let following = 0;
-          let posts = 0;
-
-          const followerMatch = text.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+followers/i);
-          if (followerMatch) {
-            let raw = followerMatch[1].toUpperCase();
-            if (raw.endsWith('K')) followers = Math.round(parseFloat(raw) * 1000);
-            else followers = parseInt(raw.replace(/,/g, ''), 10);
-          }
-
-          const followingMatch = text.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+following/i);
-          if (followingMatch) {
-            let raw = followingMatch[1].toUpperCase();
-            if (raw.endsWith('K')) following = Math.round(parseFloat(raw) * 1000);
-            else following = parseInt(raw.replace(/,/g, ''), 10);
-          }
-
-          return { followers: followers || 6, following: following || 63, posts };
-        });
-      } catch (igErr) {
-        logger.warn(`Instagram sweep failed: ${igErr.message}`);
-      }
-    }
-
     const current = getAudienceTelemetry();
     const updated = updateAudienceMetrics({
       personal: {
@@ -202,15 +141,19 @@ async function syncAudienceLive() {
         following: personalData.following || current.personal.following,
       },
       page: {
-        ...current.page,
-        name: pageData.name || current.page.name,
-        followers: pageData.followers || current.page.followers,
-        likes: pageData.likes || current.page.likes,
+        name: 'HexNemesis Productions (REMOVED)',
+        pageId: '61588703994992',
+        status: 'REMOVED',
+        followers: 0,
+        likes: 0,
       },
       instagram: {
-        ...current.instagram,
-        followers: igData.followers || current.instagram.followers,
-        following: igData.following || current.instagram.following,
+        username: 'hexnemesisproductions (SUSPENDED)',
+        userId: '17663459401',
+        status: 'SUSPENDED',
+        followers: 0,
+        following: 0,
+        posts: 0,
       },
       syncStatus: 'synced',
     });

@@ -13,9 +13,8 @@ const TIKTOK_COOKIES_FILE = path.resolve('./cookies/tiktok_session.json');
 const TIKTOK_UPLOAD_URL = 'https://www.tiktok.com/creator-center/upload?from=creator_center';
 
 const VIRAL_TIKTOK_CAPTIONS = [
-  "⚡ Stop ruining 2x10s on bad rafter cuts. Full IRC 2024 rafter birdsmouth & stair stringer layout calculator is live at hexnemesis.com 📐 #carpentry #framingcontractor #stairbuilder #constructionlife #woodworking #builderhacks #contractor",
-  "📐 Never fail an IRC stair inspection again. Exact 7-3/4 max riser & 10 min tread tolerances calculated in 2 seconds at hexnemesis.com 🔨 #framing #custombuilder #staircase #deckbuilder #carpenterlife #generalcontractor",
-  "🛠️ Perfect 1/8 reveal gap on custom cabinetry every single time. Run your face frame & hinge overlay math free at hexnemesis.com 🪚 #cabinetmaker #finishcarpentry #woodworkingtools #customcabinets #carpentrytools",
+  '🚨 Weldon Giles - "Pocket Full Of Fucks" [Official Single] Produced by HexNemesis Productions. Dropping NOV 6, 2026 on all platforms. Pre-save link in bio! 🩸 #weldongiles #pocketfulloffucks #hexnemesisproductions #newmusic #distrokid #presave #officialrelease #indiemusic',
+  '🔥 Weldon Giles - "Too Mean For The Choir" [Official Single] Produced by HexNemesis Productions. Dropping NOV 13, 2026 worldwide. Pre-save link in bio! ⚡ #weldongiles #toomeanforthechoir #hexnemesisproductions #newmusic #distrokid #presavenow #singledrop #indiemusic',
 ];
 
 /**
@@ -191,44 +190,15 @@ async function publishTikTokShort(opts = {}) {
  * @returns {Promise<Object>}
  */
 async function syndicateShortForm(opts = {}) {
-  logger.info('[Syndicator] Launching 3-way short-form syndication (TikTok + IG Reels + FB Reels)...');
-
-  // 1. Render master vertical 9:16 layout asset
-  const assetPath = await generateReelAsset(opts.type);
-
-  const results = {
-    assetPath,
+  logger.info('[Syndicator] Launching autonomous Music Vault TikTok deployment...');
+  const { deployVaultBatch } = require('../../scripts/rotate-tiktok-vault');
+  const vaultResult = await deployVaultBatch(opts.count || 1);
+  return {
     timestamp: new Date().toISOString(),
-    platforms: {},
+    platforms: {
+      tiktok: vaultResult,
+    },
   };
-
-  // 2. Deploy to Meta Business Suite (Instagram Feed & Facebook Page)
-  try {
-    const metaResult = await createBusinessSuitePost({
-      attachDiagram: true,
-      imagePath: assetPath,
-      topic: 'IRC 2024 precision layout calculations, rafter angles, and stair stringer math',
-    });
-    results.platforms.metaBusinessSuite = metaResult;
-    logger.info('[Syndicator] ✓ Meta Business Suite cross-drop complete.');
-  } catch (metaErr) {
-    logger.warn(`[Syndicator] Meta Business Suite syndication notice: ${metaErr.message}`);
-    results.platforms.metaBusinessSuite = { success: false, error: metaErr.message };
-  }
-
-  // 3. Deploy to TikTok Creator Studio
-  try {
-    const tiktokResult = await publishTikTokShort({
-      assetPath,
-      caption: opts.caption,
-    });
-    results.platforms.tiktok = tiktokResult;
-  } catch (ttErr) {
-    logger.warn(`[Syndicator] TikTok syndication notice: ${ttErr.message}`);
-    results.platforms.tiktok = { success: false, error: ttErr.message };
-  }
-
-  return results;
 }
 
 module.exports = {

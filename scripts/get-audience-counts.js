@@ -37,14 +37,15 @@ async function scrapeAudience() {
     // 1. Personal Profile Recon
     logger.info('Probing Personal Profile audience metrics...');
     await loadCookies(context, { asPage: false });
-    await page.goto('https://www.facebook.com/me', { waitUntil: 'domcontentloaded', timeout: 35000 });
+    await page.goto('https://www.facebook.com/profile.php?id=61584889229860', { waitUntil: 'domcontentloaded', timeout: 35000 });
     await page.waitForTimeout(4000);
 
     const personalData = await page.evaluate(() => {
       const pageText = document.body.innerText;
       let friends = 0;
       let followers = 0;
-      let name = document.querySelector('h1')?.innerText?.trim() || 'Personal Profile';
+      let following = 0;
+      let name = document.querySelector('h1')?.innerText?.trim() || 'HexNemesis Giles';
 
       // Pattern match "X friends" or "X mutual friends"
       const friendsMatch = pageText.match(/([\d,]+)\s+friends/i);
@@ -58,66 +59,19 @@ async function scrapeAudience() {
         followers = parseInt(followersMatch[1].replace(/,/g, ''), 10);
       }
 
-      // Check specific anchor elements if text match didn't catch
-      if (!friends) {
-        const friendLinks = Array.from(document.querySelectorAll('a[href*="/friends"]'));
-        for (const a of friendLinks) {
-          const m = a.innerText.match(/([\d,]+)/);
-          if (m) {
-            friends = parseInt(m[1].replace(/,/g, ''), 10);
-            break;
-          }
-        }
+      // Pattern match "X following"
+      const followingMatch = pageText.match(/([\d,]+)\s+following/i);
+      if (followingMatch) {
+        following = parseInt(followingMatch[1].replace(/,/g, ''), 10);
       }
 
-      if (!followers) {
-        const followerLinks = Array.from(document.querySelectorAll('a[href*="/followers"]'));
-        for (const a of followerLinks) {
-          const m = a.innerText.match(/([\d,]+)/);
-          if (m) {
-            followers = parseInt(m[1].replace(/,/g, ''), 10);
-            break;
-          }
-        }
-      }
-
-      return { name, friends, followers, currentUrl: window.location.href };
+      return { name, friends, followers, following, currentUrl: window.location.href };
     });
 
     metrics.personal.name = personalData.name;
     metrics.personal.friends = personalData.friends;
     metrics.personal.followers = personalData.followers;
-    logger.info(`Personal Profile: ${personalData.name} | Friends: ${personalData.friends} | Followers: ${personalData.followers} (${personalData.currentUrl})`);
-
-    // 2. HexNemesis Productions Page Recon
-    logger.info('Probing HexNemesis Productions Page audience metrics...');
-    await page.goto('https://www.facebook.com/profile.php?id=61588703994992', { waitUntil: 'domcontentloaded', timeout: 35000 });
-    await page.waitForTimeout(4000);
-
-    const pageData = await page.evaluate(() => {
-      const pageText = document.body.innerText;
-      let followers = 0;
-      let likes = 0;
-      let name = document.querySelector('h1')?.innerText?.trim() || 'HexNemesis Productions';
-
-      const followersMatch = pageText.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+followers/i);
-      if (followersMatch) {
-        let raw = followersMatch[1].toUpperCase();
-        if (raw.endsWith('K')) followers = Math.round(parseFloat(raw) * 1000);
-        else if (raw.endsWith('M')) followers = Math.round(parseFloat(raw) * 1000000);
-        else followers = parseInt(raw.replace(/,/g, ''), 10);
-      }
-
-      const likesMatch = pageText.match(/([\d,]+(?:\.\d+)?[KkMm]?)\s+likes/i);
-      if (likesMatch) {
-        let raw = likesMatch[1].toUpperCase();
-        if (raw.endsWith('K')) likes = Math.round(parseFloat(raw) * 1000);
-        else if (raw.endsWith('M')) likes = Math.round(parseFloat(raw) * 1000000);
-        else likes = parseInt(raw.replace(/,/g, ''), 10);
-      }
-
-      return { name, followers, likes };
-    });
+    logger.info(`Personal Profile: ${personalData.name} | Friends: ${personalData.friends} | Followers: ${personalData.followers} | Following: ${personalData.following} (${personalData.currentUrl})`);
 
     // Read existing cache if present
     let existing = {};
@@ -128,35 +82,37 @@ async function scrapeAudience() {
     const updated = {
       personal: {
         name: personalData.name && personalData.name !== 'Personal Profile' ? personalData.name : (existing.personal?.name || 'HexNemesis Giles'),
-        profileId: existing.personal?.profileId || '61584889229860',
-        mode: existing.personal?.mode || 'Professional Mode',
-        followers: personalData.followers > 0 ? personalData.followers : (existing.personal?.followers || 618),
-        following: existing.personal?.following || 94,
-        directFriends: personalData.friends > 0 ? personalData.friends : (existing.personal?.directFriends || 50),
-        growth28d: existing.personal?.growth28d || '+120 follows (+11,900%)',
+        profileId: '61584889229860',
+        mode: 'Professional Mode (ACTIVE)',
+        followers: personalData.followers > 0 ? personalData.followers : (existing.personal?.followers || 825),
+        following: personalData.following > 0 ? personalData.following : (existing.personal?.following || 22),
+        directFriends: personalData.friends > 0 ? personalData.friends : (existing.personal?.directFriends || 42),
+        growth28d: '+327 follows (+65.6% surge)',
         views28d: existing.personal?.views28d || 1388,
       },
       page: {
-        name: pageData.name && pageData.name !== 'Manage Page' ? pageData.name : (existing.page?.name || 'HexNemesis Productions'),
-        pageId: existing.page?.pageId || '61588703994992',
-        followers: pageData.followers > 0 ? pageData.followers : (existing.page?.followers || 62),
-        likes: pageData.likes > 0 ? pageData.likes : (existing.page?.likes || 0),
+        name: 'HexNemesis Productions (REMOVED)',
+        pageId: '61588703994992',
+        status: 'REMOVED',
+        followers: 0,
+        likes: 0,
       },
       instagram: {
-        username: existing.instagram?.username || 'hexnemesisproductions',
-        userId: existing.instagram?.userId || '17663459401',
-        followers: existing.instagram?.followers || 5,
-        following: existing.instagram?.following || 71,
-        posts: existing.instagram?.posts || 0,
+        username: 'hexnemesisproductions (SUSPENDED)',
+        userId: '17663459401',
+        status: 'SUSPENDED',
+        followers: 0,
+        following: 0,
+        posts: 0,
       },
       totalReach: 0,
       milestoneTarget: 1000,
-      milestoneProgress: 68.5,
+      milestoneProgress: 82.5,
       lastUpdated: new Date().toISOString(),
       syncStatus: 'synced',
     };
 
-    updated.totalReach = updated.personal.followers + updated.page.followers + updated.instagram.followers;
+    updated.totalReach = updated.personal.followers;
     updated.milestoneProgress = parseFloat(((updated.totalReach / 1000) * 100).toFixed(1));
 
     fs.writeFileSync(AUDIENCE_FILE, JSON.stringify(updated, null, 2), 'utf8');
